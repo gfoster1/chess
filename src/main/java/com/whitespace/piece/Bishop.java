@@ -35,7 +35,7 @@ public class Bishop extends Piece {
     @Override
     public List<Move> possibleMoves(Board board) {
         Stream.Builder<Move> builder = Stream.builder();
-        generateValidDiagonalMoves(builder, board);
+        generateValidDiagonalMoves(builder, board, 8);
         return builder.build().collect(Collectors.toList());
     }
 

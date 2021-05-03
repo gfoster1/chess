@@ -17,14 +17,14 @@ public class Board {
 
     private final Piece[][] pieces = new Piece[MAX_BOARD_SIZE][MAX_BOARD_SIZE];
     private final Position[][] positions = new Position[MAX_BOARD_SIZE][MAX_BOARD_SIZE];
-    private final BoardService blackBoardService;
-    private final BoardService whiteBoardService;
+    private final BoardScoringService blackBoardScoringService;
+    private final BoardScoringService whiteBoardScoringService;
     private final Stack<MoveResult> moveHistory = new Stack<>();
     private final List<Piece> pieceList = new ArrayList<>(32);
 
-    public Board(BoardService blackBoardService, BoardService whiteBoardService) {
-        this.blackBoardService = blackBoardService;
-        this.whiteBoardService = whiteBoardService;
+    public Board(BoardScoringService blackBoardScoringService, BoardScoringService whiteBoardScoringService) {
+        this.blackBoardScoringService = blackBoardScoringService;
+        this.whiteBoardScoringService = whiteBoardScoringService;
         initializePosition();
         initializeWhitePieces();
         initializeBlackPieces();
@@ -42,7 +42,7 @@ public class Board {
         final AtomicBoolean isPlaying = new AtomicBoolean(true);
         while (isPlaying.get()) {
             System.out.println("White's move - begin");
-            var whitesMove = whiteBoardService.findBestMove(this);
+            var whitesMove = whiteBoardScoringService.findBestMove(this);
             whitesMove.ifPresentOrElse(move -> {
                 MoveResult moveResult = applyMove(move, true);
                 printMoveResult(moveResult);
@@ -60,7 +60,7 @@ public class Board {
             System.out.println("White's move - end");
 
             System.out.println("Black's move - begin");
-            var blacksMove = blackBoardService.findBestMove(this);
+            var blacksMove = blackBoardScoringService.findBestMove(this);
             blacksMove.ifPresentOrElse(move -> {
                 MoveResult moveResult = applyMove(move, true);
                 printMoveResult(moveResult);

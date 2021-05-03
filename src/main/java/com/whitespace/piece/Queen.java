@@ -23,8 +23,9 @@ public class Queen extends Piece {
     @Override
     public List<Move> possibleMoves(Board board) {
         Stream.Builder<Move> builder = Stream.builder();
-        generateValidDiagonalMoves(builder, board);
-        generateValidHorizontalMoves(builder, board);
+        int size = 8;
+        generateValidDiagonalMoves(builder, board, size);
+        generateValidHorizontalMoves(builder, board, size);
         return builder.build().collect(Collectors.toList());
     }
 }

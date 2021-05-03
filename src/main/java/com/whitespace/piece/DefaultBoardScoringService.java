@@ -1,7 +1,7 @@
 package com.whitespace.piece;
 
 import com.whitespace.Board;
-import com.whitespace.BoardService;
+import com.whitespace.BoardScoringService;
 import com.whitespace.Player;
 import com.whitespace.movement.Move;
 
@@ -11,10 +11,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class DefaultBoardService implements BoardService {
+public class DefaultBoardScoringService implements BoardScoringService {
     private final Player player;
 
-    public DefaultBoardService(Player player) {
+    public DefaultBoardScoringService(Player player) {
         this.player = player;
     }
 

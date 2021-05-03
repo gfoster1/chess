@@ -67,7 +67,7 @@ public class Rook extends Piece {
     @Override
     public List<Move> possibleMoves(Board board) {
         // handle a castle
-        return generateValidHorizontalMoves(Stream.builder(), board)
+        return generateValidHorizontalMoves(Stream.builder(), board, 8)
                 .build()
                 .collect(Collectors.toList());
     }

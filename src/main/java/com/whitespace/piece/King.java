@@ -7,6 +7,8 @@ import com.whitespace.movement.Position;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class King extends Piece {
     public King(Player player, Position position) {
@@ -20,56 +22,10 @@ public class King extends Piece {
 
     @Override
     public List<Move> possibleMoves(Board board) {
-        var piece = this;
-        List<Move> possibleMoves = new ArrayList<>();
-        generateDiagnalMoves(board, piece, possibleMoves, position.row(), position.column());
-        generateHorizontalMoves(board, piece, possibleMoves, position.row(), position.column());
-        return possibleMoves;
-    }
-
-    private void generateHorizontalMoves(Board board, King piece, List<Move> possibleMoves, int row, int column) {
-        board.getPosition(row + 1, column).ifPresent(destination -> {
-            if (!board.isSpaceTakenByMyPiece(destination, player)) {
-                possibleMoves.add(new Move(piece, destination));
-            }
-        });
-        board.getPosition(row, column + 1).ifPresent(destination -> {
-            if (!board.isSpaceTakenByMyPiece(destination, player)) {
-                possibleMoves.add(new Move(piece, destination));
-            }
-        });
-        board.getPosition(row - 1, column).ifPresent(destination -> {
-            if (!board.isSpaceTakenByMyPiece(destination, player)) {
-                possibleMoves.add(new Move(piece, destination));
-            }
-        });
-        board.getPosition(row, column - 1).ifPresent(destination -> {
-            if (!board.isSpaceTakenByMyPiece(destination, player)) {
-                possibleMoves.add(new Move(piece, destination));
-            }
-        });
-    }
-
-    private void generateDiagnalMoves(Board board, King piece, List<Move> possibleMoves, int x, int y) {
-        board.getPosition(x + 1, y + 1).ifPresent(destination -> {
-            if (!board.isSpaceTakenByMyPiece(destination, player)) {
-                possibleMoves.add(new Move(piece, destination));
-            }
-        });
-        board.getPosition(x - 1, y + 1).ifPresent(destination -> {
-            if (!board.isSpaceTakenByMyPiece(destination, player)) {
-                possibleMoves.add(new Move(piece, destination));
-            }
-        });
-        board.getPosition(x + 1, y - 1).ifPresent(destination -> {
-            if (!board.isSpaceTakenByMyPiece(destination, player)) {
-                possibleMoves.add(new Move(piece, destination));
-            }
-        });
-        board.getPosition(x - 1, y - 1).ifPresent(destination -> {
-            if (!board.isSpaceTakenByMyPiece(destination, player)) {
-                possibleMoves.add(new Move(piece, destination));
-            }
-        });
+        Stream.Builder<Move> builder = Stream.builder();
+        int size = 1;
+        generateValidDiagonalMoves(builder, board, size);
+        generateValidHorizontalMoves(builder, board, size);
+        return builder.build().collect(Collectors.toList());
     }
 }

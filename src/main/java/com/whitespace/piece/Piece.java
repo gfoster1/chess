@@ -35,13 +35,13 @@ public abstract class Piece {
     public abstract List<Move> possibleMoves(Board board);
 
     protected Stream.Builder<Move> generateValidHorizontalMoves(Stream.Builder<Move> builder,
-                                                                Board board) {
+                                                                Board board,
+                                                                int size) {
         var upAvailable = new AtomicBoolean(true);
         var downAvailable = new AtomicBoolean(true);
         var rightAvailable = new AtomicBoolean(true);
         var leftAvailable = new AtomicBoolean(true);
-        var maxBoardSize = 8;
-        for (int i = 0; i < maxBoardSize; i++) {
+        for (int i = 0; i < size; i++) {
             var row = position.row() - i;
             var column = position.column();
             doStuff(builder, leftAvailable, row, column, board, this);
@@ -88,13 +88,13 @@ public abstract class Piece {
     }
 
     protected Stream.Builder<Move> generateValidDiagonalMoves(Stream.Builder<Move> builder,
-                                                              Board board) {
+                                                              Board board,
+                                                              int size) {
         var upAvailable = new AtomicBoolean(true);
         var downAvailable = new AtomicBoolean(true);
         var rightAvailable = new AtomicBoolean(true);
         var leftAvailable = new AtomicBoolean(true);
-        var maxBoardSize = 8;
-        for (int i = 0; i < maxBoardSize; i++) {
+        for (int i = 0; i < size; i++) {
             var row = position.row() - i;
             var column = position.column() - i;
             doStuff(builder, leftAvailable, row, column, board, this);
