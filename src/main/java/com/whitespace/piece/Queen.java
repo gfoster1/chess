@@ -16,11 +16,6 @@ public class Queen extends Piece {
     }
 
     @Override
-    public int strength(Board board) {
-        return 10;
-    }
-
-    @Override
     public List<Move> possibleMoves(Board board) {
         Stream.Builder<Move> builder = Stream.builder();
         int size = 8;

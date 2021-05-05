@@ -5,17 +5,17 @@ import com.whitespace.Player;
 import com.whitespace.movement.Move;
 import com.whitespace.movement.Position;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Pawn extends Piece {
     private static final Map<Integer, Integer> blackValues = new HashMap<>();
     private static final Map<Integer, Integer> whiteValues = new HashMap<>();
+    private final Position startingPosition;
 
     public Pawn(Player player, Position position) {
         super(player, position);
+        startingPosition = position;
+
         int queensStrength = 10;
         whiteValues.put(0, 1);
         whiteValues.put(1, 1);
@@ -37,16 +37,6 @@ public class Pawn extends Piece {
     }
 
     @Override
-    public int strength(Board board) {
-        int score = 1;
-        int positionalStrength = switch (player) {
-            case black -> blackValues.get(position.row());
-            case white -> whiteValues.get(position.row());
-        };
-        return score + positionalStrength;
-    }
-
-    @Override
     public List<Move> possibleMoves(Board board) {
         var piece = this;
         List<Move> moves = new ArrayList<>();
@@ -54,16 +44,22 @@ public class Pawn extends Piece {
             case white -> 1;
             case black -> -1;
         };
-        int row = position.row() + (1 * multipler);
-        int maxBoardSize = 7;
-        if (row < 0 || row > maxBoardSize) {
-            return moves;
+
+
+        if (position.equals(startingPosition)) {
+            var p1 = board.getPosition(startingPosition.row() + (1 * multipler), startingPosition.column())
+                    .get();
+            var p2 = board.getPosition(startingPosition.row() + (2 * multipler), startingPosition.column())
+                    .get();
+            if (!board.isSpaceTaken(p1) && !board.isSpaceTaken(p2)) {
+                moves.add(new Move(piece, p2));
+            }
         }
 
+        int row = position.row() + (1 * multipler);
         board.getPosition(row, position.column())
                 .ifPresent(destination -> {
-                    if (!board.isSpaceTakenByMyPiece(destination, player)
-                            && !board.isSpaceTakenByOpposingPlayerPiece(destination, player)) {
+                    if (!board.isSpaceTaken(destination)) {
                         moves.add(new Move(piece, destination));
                     }
                 });
@@ -81,22 +77,6 @@ public class Pawn extends Piece {
                         moves.add(new Move(piece, destination));
                     }
                 });
-
-        int whiteStartingPosition = 1;
-        int blackStartingPosition = 6;
-        if ((player.equals(Player.white) && position.row() == whiteStartingPosition) || (player.equals(Player.black) && position.row() == blackStartingPosition)) {
-            row = position.row() + (2 * multipler);
-            if (row > 6 || row < 0) {
-                System.out.println("problem pawn");
-            }
-            board.getPosition(row, position.column())
-                    .ifPresent(destination -> {
-                        if (!board.isSpaceTakenByMyPiece(destination, player)
-                                && !board.isSpaceTakenByOpposingPlayerPiece(destination, player)) {
-                            moves.add(new Move(piece, destination));
-                        }
-                    });
-        }
         return moves;
     }
 }

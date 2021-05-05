@@ -15,24 +15,6 @@ public class Bishop extends Piece {
     }
 
     @Override
-    public int strength(Board board) {
-        List<Piece> myPieces = switch (player) {
-            case black -> board.getBlackPieces();
-            case white -> board.getWhitePieces();
-        };
-        var count = myPieces.stream()
-                .filter(piece -> piece instanceof Bishop)
-                .count();
-        int score = 0;
-        if (count == 1) {
-            score = 4;
-        } else if (count == 1) {
-            score = 3;
-        }
-        return score;
-    }
-
-    @Override
     public List<Move> possibleMoves(Board board) {
         Stream.Builder<Move> builder = Stream.builder();
         generateValidDiagonalMoves(builder, board, 8);

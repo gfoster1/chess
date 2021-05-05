@@ -17,27 +17,8 @@ public class Rook extends Piece {
         super(player, position);
     }
 
-    @Override
-    public int strength(Board board) {
-        List<Piece> myPieces = switch (player) {
-            case black -> board.getBlackPieces();
-            case white -> board.getWhitePieces();
-        };
-        List<Piece> rooks = myPieces.stream()
-                .filter(piece -> piece instanceof Rook)
-                .collect(Collectors.toList());
-        int twoRookMultipler = switch (rooks.size()) {
-            case 2 -> 6 + (canSeeEachOther(rooks.get(0).position, rooks.get(1).position, board) ? 2 : 0);
-            case 1 -> 5;
-            default -> 0;
-        };
-
-        return twoRookMultipler;
-    }
-
     private boolean canSeeEachOther(Position p1, Position p2, Board board) {
-        Stream<Piece> pieces = Stream.concat(board.getBlackPieces().stream(), board.getWhitePieces().stream());
-        boolean count = pieces
+        boolean count = board.getPieces().parallelStream()
                 .filter(piece -> piece.getPosition() != p1 && piece.getPosition() != p2)
                 .filter(piece -> {
                     var p3 = piece.getPosition();
