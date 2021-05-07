@@ -11,7 +11,7 @@ import java.util.Optional;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class Board {
+public class DefaultChessBoard implements ChessBoard {
     public static final int MAX_BOARD_SIZE = 8;
 
     private final BestMoveService blackBoardScoringService;
@@ -22,7 +22,7 @@ public class Board {
     private final Position[][] positions = new Position[MAX_BOARD_SIZE][MAX_BOARD_SIZE];
     private final List<Piece> pieceList = new ArrayList<>(32);
 
-    public Board(BestMoveService blackBoardScoringService, BestMoveService whiteBoardScoringService) {
+    public DefaultChessBoard(BestMoveService blackBoardScoringService, BestMoveService whiteBoardScoringService) {
         this.blackBoardScoringService = blackBoardScoringService;
         this.whiteBoardScoringService = whiteBoardScoringService;
         initializePosition();
@@ -81,7 +81,7 @@ public class Board {
         printBoard();
         var currentPlayer = moveResult.piece().getPlayer();
         var output = String.format("%s moved %s from %s to %s", currentPlayer,
-                moveResult.piece().getClass(),
+                moveResult.piece().getClass().getSimpleName(),
                 moveResult.origin(), moveResult.destination());
         System.out.println(output);
         var opposingPlayer = switch (currentPlayer) {
@@ -89,7 +89,7 @@ public class Board {
             case black -> Player.white;
         };
         moveResult.capturedPiece().ifPresent(piece -> {
-            System.out.println(String.format("%s %s was captured", opposingPlayer, piece.getClass()));
+            System.out.println(String.format("%s %s was captured", opposingPlayer, piece.getClass().getSimpleName()));
         });
 
         if (moveResult.opponentWins()) {
@@ -140,13 +140,13 @@ public class Board {
 
     public MoveResult applyMove(Move move, boolean debug) {
         var currentPlayerWins = new AtomicBoolean(false);
-        var opponentWins = false;
         if (isInvalidMove(move)) {
-            return new MoveResult(null, null, null, null, true, false);
+            return new MoveResult(null, null, null, null, false, false);
         }
 
-        var destination = move.destination();
+        var opponentWins = false;
         var pieceToBeMoved = move.piece();
+        var destination = move.destination();
         var player = pieceToBeMoved.getPlayer();
         var origin = pieceToBeMoved.getPosition();
 
@@ -185,7 +185,8 @@ public class Board {
                 // todo handle this
             }
         }
-        var moveResult = new MoveResult(pieceToBeMoved, origin, destination, possiblyCapturedPiece, currentPlayerWins.get(), opponentWins);
+        var moveResult = new MoveResult(pieceToBeMoved, origin, destination, possiblyCapturedPiece, opponentWins,
+                currentPlayerWins.get());
         if (debug) {
             printMoveResult(moveResult);
         }

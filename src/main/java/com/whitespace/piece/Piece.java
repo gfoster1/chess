@@ -1,6 +1,6 @@
 package com.whitespace.piece;
 
-import com.whitespace.Board;
+import com.whitespace.ChessBoard;
 import com.whitespace.Player;
 import com.whitespace.movement.Move;
 import com.whitespace.movement.Position;
@@ -30,10 +30,10 @@ public abstract class Piece {
         return position;
     }
 
-    public abstract List<Move> possibleMoves(Board board);
+    public abstract List<Move> possibleMoves(ChessBoard chessBoard);
 
     protected Stream.Builder<Move> generateValidHorizontalMoves(Stream.Builder<Move> builder,
-                                                                Board board,
+                                                                ChessBoard board,
                                                                 int size) {
         var upAvailable = new AtomicBoolean(true);
         var downAvailable = new AtomicBoolean(true);
@@ -62,7 +62,7 @@ public abstract class Piece {
     private void doStuff(Stream.Builder<Move> builder,
                          AtomicBoolean availableDirection,
                          int row, int column,
-                         Board board,
+                         ChessBoard board,
                          Piece piece) {
         if (row == position.row() && column == position.column()) {
             return;
@@ -86,7 +86,7 @@ public abstract class Piece {
     }
 
     protected Stream.Builder<Move> generateValidDiagonalMoves(Stream.Builder<Move> builder,
-                                                              Board board,
+                                                              ChessBoard board,
                                                               int size) {
         var upAvailable = new AtomicBoolean(true);
         var downAvailable = new AtomicBoolean(true);

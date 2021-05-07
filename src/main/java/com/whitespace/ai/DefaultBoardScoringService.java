@@ -1,6 +1,6 @@
 package com.whitespace.ai;
 
-import com.whitespace.Board;
+import com.whitespace.DefaultChessBoard;
 import com.whitespace.BoardScoreService;
 import com.whitespace.Player;
 import com.whitespace.piece.*;
@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class DefaultBoardScoringService implements BoardScoreService {
-
     private final Player player;
     private final int middleModifier;
 
@@ -19,10 +18,10 @@ public class DefaultBoardScoringService implements BoardScoreService {
     }
 
     @Override
-    public int scoreBoard(Board board) {
+    public double scoreBoard(DefaultChessBoard defaultChessBoard) {
 
         var scorer = new Scorer(player, middleModifier);
-        board.getPieces().parallelStream()
+        defaultChessBoard.getPieces().parallelStream()
                 .forEach(piece -> {
                             scorer.computePositionalStrengthScore(piece);
                             if (piece instanceof Rook rook) {

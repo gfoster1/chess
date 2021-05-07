@@ -1,6 +1,6 @@
 package com.whitespace.ai;
 
-import com.whitespace.Board;
+import com.whitespace.DefaultChessBoard;
 import com.whitespace.BoardScoreService;
 import com.whitespace.Player;
 import com.whitespace.movement.Position;
@@ -11,28 +11,24 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.TreeMap;
 
 public class CachingBoardScoringService implements BoardScoreService {
-    private final Map<Integer, Integer> cache = new TreeMap<>();
+    private final Map<Integer, Double> cache = new TreeMap<>();
 
-    private final Player player;
-    private final int middleModifier;
+    private final CustomScorer scorer;
 
     public CachingBoardScoringService(Player player, int middleModifier) {
-        this.middleModifier = middleModifier;
-        this.player = player;
         loadFromDisk();
+        scorer = new CustomScorer(player, middleModifier);
     }
 
     @Override
-    public int scoreBoard(Board board) {
-
+    public double scoreBoard(DefaultChessBoard defaultChessBoard) {
         var hashCodeBuilder = new HashCodeBuilder();
-        board.getPieces().parallelStream().forEach(piece -> {
+        defaultChessBoard.getPieces().stream().forEach(piece -> {
             hashCodeBuilder.append(piece.getClass());
             Position position = piece.getPosition();
             hashCodeBuilder.append(position.row());
@@ -45,10 +41,9 @@ public class CachingBoardScoringService implements BoardScoreService {
             return cache.get(hashCode);
         }
 
-        var scorer = new Scorer(player, middleModifier);
-        board.getPieces().parallelStream()
+        scorer.reset();
+        defaultChessBoard.getPieces().parallelStream()
                 .forEach(piece -> {
-                            scorer.computePositionalStrengthScore(piece);
                             if (piece instanceof Rook rook) {
                                 scorer.score(rook);
                             }
@@ -58,11 +53,11 @@ public class CachingBoardScoringService implements BoardScoreService {
                             }
 
                             if (piece instanceof Knight knight) {
-                                scorer.score(knight);
+                                scorer.score(knight, defaultChessBoard);
                             }
 
-                            if (piece instanceof Queen rook) {
-                                scorer.score(rook);
+                            if (piece instanceof Queen queen) {
+                                scorer.score(queen);
                             }
 
                             if (piece instanceof King king) {
@@ -75,20 +70,18 @@ public class CachingBoardScoringService implements BoardScoreService {
                         }
                 );
 
-        scorer.computePositionalStrengthOfRooks();
-        scorer.computePositionalStrengthOfBishops();
-        scorer.computePositionalStrengthOfKnights();
         var score = scorer.getTotalScore();
         cache.put(hashCode, score);
         return score;
     }
 
     public void writeToDisk() {
+        System.out.println("Writing the cache to disk");
         try {
             var fileWriter = new FileWriter("cache.txt");
-            cache.forEach((integer, integer2) -> {
+            cache.forEach((key, value) -> {
                 try {
-                    fileWriter.write(integer + ":" + integer2 + System.lineSeparator());
+                    fileWriter.write(key + ":" + value + System.lineSeparator());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -96,6 +89,8 @@ public class CachingBoardScoringService implements BoardScoreService {
             fileWriter.close();
         } catch (IOException e) {
             System.out.println("An error occurred.");
+        } finally {
+            System.out.println("Completed writing the cache to disk");
         }
     }
 
@@ -111,8 +106,8 @@ public class CachingBoardScoringService implements BoardScoreService {
             scanner = new Scanner(file);
             while (scanner.hasNextLine()) {
                 String[] data = scanner.nextLine().split(":");
-                int key = Integer.parseInt(data[0]);
-                int value = Integer.parseInt(data[1]);
+                var key = Integer.parseInt(data[0]);
+                var value = Double.parseDouble(data[1]);
                 cache.put(key, value);
             }
         } catch (FileNotFoundException e) {
@@ -122,188 +117,6 @@ public class CachingBoardScoringService implements BoardScoreService {
                 scanner.close();
                 System.out.println("Cache file load complete");
             }
-        }
-    }
-
-    private final static class Scorer {
-        private static final Map<Integer, Integer> blackValues = new HashMap<>();
-        private static final Map<Integer, Integer> whiteValues = new HashMap<>();
-
-        static {
-            int queensStrength = 10;
-            whiteValues.put(0, 1);
-            whiteValues.put(1, 1);
-            whiteValues.put(2, 2);
-            whiteValues.put(3, 3);
-            whiteValues.put(4, 4);
-            whiteValues.put(5, 5);
-            whiteValues.put(6, 6);
-            whiteValues.put(7, queensStrength);
-
-            blackValues.put(7, 1);
-            blackValues.put(6, 1);
-            blackValues.put(5, 2);
-            blackValues.put(4, 3);
-            blackValues.put(3, 4);
-            blackValues.put(2, 5);
-            blackValues.put(1, 6);
-            blackValues.put(0, queensStrength);
-        }
-
-        private final Player player;
-        private final int middleModifier;
-
-        private int myRooks = 0;
-        private int opponentsRooks = 0;
-        private int myBishops = 0;
-        private int opponentsBishops = 0;
-        private int myKnights = 0;
-        private int opponentsKnights = 0;
-
-        private int rookScore = 0;
-        private int queenScore = 0;
-        private int pawnScore = 0;
-        private int knightScore = 0;
-        private int bishopScore = 0;
-        private int kingScore = 0;
-        private int positionalStrengthScore = 0;
-
-        private Scorer(Player player, int middleModifier) {
-            this.player = player;
-            this.middleModifier = middleModifier;
-        }
-
-        protected void computePositionalStrengthScore(Piece piece) {
-            if (piece.getPosition().column() == 3 || piece.getPosition().column() == 4) {
-                if (piece.getPlayer().equals(player)) {
-                    positionalStrengthScore += middleModifier;
-                } else {
-                    positionalStrengthScore -= middleModifier;
-                }
-            }
-        }
-
-        protected void score(Rook rook) {
-            if (rook.getPlayer().equals(player)) {
-                myRooks++;
-            } else {
-                opponentsRooks++;
-            }
-        }
-
-        protected void score(Queen queen) {
-            if (queen.getPlayer().equals(player)) {
-                queenScore += 10;
-            } else {
-                queenScore -= 10;
-            }
-        }
-
-        protected void score(King king) {
-            if (king.getPlayer().equals(player)) {
-                kingScore += 200;
-            } else {
-                kingScore -= 200;
-            }
-        }
-
-        protected void score(Bishop bishop) {
-            if (bishop.getPlayer().equals(player)) {
-                myBishops++;
-            } else {
-                opponentsBishops++;
-            }
-        }
-
-        protected void score(Knight knight) {
-            if (knight.getPlayer().equals(player)) {
-                myKnights++;
-            } else {
-                opponentsKnights++;
-            }
-        }
-
-        protected void score(Pawn pawn) {
-            int score;
-            if (pawn.getPlayer().equals(Player.black)) {
-                score = blackValues.get(pawn.getPosition().row());
-            } else {
-                score = whiteValues.get(pawn.getPosition().row());
-            }
-
-            if (pawn.getPlayer().equals(player)) {
-                pawnScore += score;
-            } else {
-                pawnScore -= score;
-            }
-        }
-
-        protected int getTotalScore() {
-            computeKnightScore();
-            computeBishopScore();
-            computeRookScore();
-            return kingScore + queenScore + rookScore + bishopScore + knightScore + pawnScore + positionalStrengthScore;
-        }
-
-        private void computeKnightScore() {
-            var oneKnight = 3;
-            var twoKnights = 5;
-            if (myKnights == 2) {
-                knightScore += twoKnights;
-            } else if (myKnights == 1) {
-                knightScore += oneKnight;
-            }
-
-            if (opponentsKnights == 2) {
-                knightScore -= twoKnights;
-            } else if (opponentsKnights == 1) {
-                knightScore -= oneKnight;
-            }
-        }
-
-        private void computeBishopScore() {
-            var oneBishop = 3;
-            var twoBishops = 5;
-            if (myBishops == 2) {
-                bishopScore += twoBishops;
-            } else if (myBishops == 1) {
-                bishopScore += oneBishop;
-            }
-
-            if (opponentsBishops == 2) {
-                bishopScore -= twoBishops;
-            } else if (opponentsBishops == 1) {
-                bishopScore -= oneBishop;
-            }
-        }
-
-        private void computeRookScore() {
-            var oneRook = 5;
-            var twoRooks = 7;
-
-            if (myRooks == 2) {
-                rookScore += twoRooks;
-            } else if (myRooks == 1) {
-                rookScore += oneRook;
-            }
-
-            if (opponentsRooks == 2) {
-                rookScore -= twoRooks;
-            } else if (opponentsRooks == 1) {
-                rookScore -= oneRook;
-            }
-        }
-
-        private void computePositionalStrengthOfRooks() {
-
-        }
-
-        private void computePositionalStrengthOfBishops() {
-
-        }
-
-        private void computePositionalStrengthOfKnights() {
-
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.whitespace.piece;
 
-import com.whitespace.Board;
+import com.whitespace.DefaultChessBoard;
+import com.whitespace.ChessBoard;
 import com.whitespace.Player;
 import com.whitespace.movement.Move;
 import com.whitespace.movement.Position;
@@ -17,8 +18,8 @@ public class Rook extends Piece {
         super(player, position);
     }
 
-    private boolean canSeeEachOther(Position p1, Position p2, Board board) {
-        boolean count = board.getPieces().parallelStream()
+    private boolean canSeeEachOther(Position p1, Position p2, DefaultChessBoard defaultChessBoard) {
+        boolean count = defaultChessBoard.getPieces().parallelStream()
                 .filter(piece -> piece.getPosition() != p1 && piece.getPosition() != p2)
                 .filter(piece -> {
                     var p3 = piece.getPosition();
@@ -46,7 +47,7 @@ public class Rook extends Piece {
     }
 
     @Override
-    public List<Move> possibleMoves(Board board) {
+    public List<Move> possibleMoves(ChessBoard board) {
         // handle a castle
         return generateValidHorizontalMoves(Stream.builder(), board, 8)
                 .build()

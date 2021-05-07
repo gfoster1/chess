@@ -1,13 +1,16 @@
 package com.whitespace.ai;
 
 import com.whitespace.BestMoveService;
-import com.whitespace.Board;
+import com.whitespace.DefaultChessBoard;
 import com.whitespace.BoardScoreService;
 import com.whitespace.Player;
 import com.whitespace.movement.Move;
 import com.whitespace.piece.Piece;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -23,9 +26,9 @@ public class DefaultBestMoveService implements BestMoveService {
         this.boardScoreService = boardScoreService;
     }
 
-    public Optional<Move> findBestMove(Board board) {
-        HashMap<Move, Integer> scores = new HashMap<>();
-        findBestMove(board, 0, null, scores);
+    public Optional<Move> findBestMove(DefaultChessBoard defaultChessBoard) {
+        Map<Move, Double> scores = new HashMap<>();
+        findBestMove(defaultChessBoard, 0, null, scores);
         if (scores.isEmpty()) {
             return Optional.empty();
         }
@@ -33,52 +36,64 @@ public class DefaultBestMoveService implements BestMoveService {
         return Optional.of(move);
     }
 
-    private void findBestMove(Board board, int currentDepth, Move originalMove, Map<Move, Integer> scores) {
-        var moveScore = boardScoreService.scoreBoard(board);
-        int threshHold = -20;
-        if (moveScore < threshHold) {
-            return;
-        }
-
+    private void findBestMove(DefaultChessBoard defaultChessBoard, int currentDepth, Move originalMove, Map<Move, Double> scores) {
         if (currentDepth == maxDepth) {
             if (originalMove == null) {
                 System.out.println("We have a problem");
                 return;
             }
-
-            scores.compute(originalMove, (move, integer) -> {
-                if (integer == null || moveScore > integer) {
-                    return moveScore;
-                }
-                return integer;
-            });
             return;
         }
 
-        var myMoves = board.getPieces().stream()
+        if (originalMove != null && Double.MIN_VALUE == scores.getOrDefault(originalMove, 0d)) {
+            // check if the threshhold was triggered
+            System.out.println("Thresh hold triggered on originalMove = " + originalMove);
+            return;
+        }
+
+        var myMoves = defaultChessBoard.getPieces().parallelStream()
                 .filter(piece -> piece.getPlayer().equals(player))
-                .flatMap((Function<Piece, Stream<Move>>) piece -> piece.possibleMoves(board).stream())
+                .flatMap((Function<Piece, Stream<Move>>) piece -> piece.possibleMoves(defaultChessBoard).parallelStream())
                 .collect(Collectors.toSet());
 
         for (Move myMove : myMoves) {
-            // get all possible opponent moves from this move
-            board.applyMove(myMove, false);
+            var move = originalMove == null ? myMove : originalMove;
+            defaultChessBoard.applyMove(myMove, false);
 
-            var opponentsMoves = board.getPieces().stream()
-                    .filter(piece -> !piece.getPlayer().equals(player))
-                    .flatMap((Function<Piece, Stream<Move>>) piece -> piece.possibleMoves(board).stream())
-                    .collect(Collectors.toSet());
+            double threshHold = -20;
+            var myMoveScore = boardScoreService.scoreBoard(defaultChessBoard);
+            if (myMoveScore > threshHold) {
+                // make sure I don't screw up here
+                // get all possible opponent moves from this move
+                var opponentsMoves = defaultChessBoard.getPieces().parallelStream()
+                        .filter(piece -> !piece.getPlayer().equals(player))
+                        .flatMap((Function<Piece, Stream<Move>>) piece -> piece.possibleMoves(defaultChessBoard).parallelStream())
+                        .collect(Collectors.toSet());
 
-            for (Move opponentsMove : opponentsMoves) {
-                board.applyMove(opponentsMove, false);
-                var opponentScore = boardScoreService.scoreBoard(board);
-                if (opponentScore > threshHold) {
-                    Move move = originalMove == null ? myMove : originalMove;
-                    findBestMove(board, currentDepth + 1, move, scores);
+                for (Move opponentsMove : opponentsMoves) {
+                    processOpponentMove(defaultChessBoard, currentDepth, scores, move, threshHold, opponentsMove);
                 }
-                board.revertLastMove();
             }
-            board.revertLastMove();
+            defaultChessBoard.revertLastMove();
         }
+    }
+
+    private void processOpponentMove(DefaultChessBoard defaultChessBoard, int currentDepth, Map<Move, Double> scores, Move move, double threshHold, Move opponentsMove) {
+        defaultChessBoard.applyMove(opponentsMove, false);
+        var opponentMoveScore = boardScoreService.scoreBoard(defaultChessBoard);
+        if (opponentMoveScore > threshHold) {
+            // loss thresh hold triggered
+            scores.compute(move, (m1, existingScore) -> {
+                if (existingScore == null) {
+                    return opponentMoveScore;
+                }
+                if (opponentMoveScore > existingScore && existingScore != Double.MIN_VALUE) {
+                    return opponentMoveScore;
+                }
+                return existingScore;
+            });
+            findBestMove(defaultChessBoard, currentDepth + 1, move, scores);
+        }
+        defaultChessBoard.revertLastMove();
     }
 }

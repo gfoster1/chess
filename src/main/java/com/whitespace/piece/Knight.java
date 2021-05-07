@@ -1,6 +1,6 @@
 package com.whitespace.piece;
 
-import com.whitespace.Board;
+import com.whitespace.ChessBoard;
 import com.whitespace.Player;
 import com.whitespace.movement.Move;
 import com.whitespace.movement.Position;
@@ -14,8 +14,8 @@ public class Knight extends Piece {
     }
 
     @Override
-    public List<Move> possibleMoves(Board board) {
-        List<Move> possibleMoves = new ArrayList<>();
+    public List<Move> possibleMoves(ChessBoard board) {
+        List<Move> possibleMoves = new ArrayList<>(4);
         final var piece = this;
         var row = position.row() + 2;
         var column = position.column() + 1;

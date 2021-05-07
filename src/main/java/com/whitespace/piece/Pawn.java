@@ -1,11 +1,14 @@
 package com.whitespace.piece;
 
-import com.whitespace.Board;
+import com.whitespace.ChessBoard;
 import com.whitespace.Player;
 import com.whitespace.movement.Move;
 import com.whitespace.movement.Position;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Pawn extends Piece {
     private static final Map<Integer, Integer> blackValues = new HashMap<>();
@@ -37,9 +40,9 @@ public class Pawn extends Piece {
     }
 
     @Override
-    public List<Move> possibleMoves(Board board) {
+    public List<Move> possibleMoves(ChessBoard board) {
         var piece = this;
-        List<Move> moves = new ArrayList<>();
+        List<Move> moves = new ArrayList<>(4);
         int multipler = switch (player) {
             case white -> 1;
             case black -> -1;

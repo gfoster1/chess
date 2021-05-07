@@ -5,5 +5,5 @@ import com.whitespace.movement.Move;
 import java.util.Optional;
 
 public interface BestMoveService {
-    Optional<Move> findBestMove(Board board);
+    Optional<Move> findBestMove(DefaultChessBoard defaultChessBoard);
 }
