@@ -7,6 +7,7 @@ import com.whitespace.piece.Knight;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.util.Collections;
 import java.util.Optional;
 
 class CustomScorerTest {
@@ -19,8 +20,9 @@ class CustomScorerTest {
         Mockito.when(chessBoard.getPosition(Mockito.anyInt(), Mockito.anyInt())).thenReturn(Optional.of(position));
         Mockito.when(chessBoard.isSpaceTakenByMyPiece(Mockito.any(), Mockito.any())).thenReturn(false);
         Knight knight = new Knight(Player.white, position);
-        customScorer.score(knight, chessBoard);
-        double totalScore = customScorer.getTotalScore();
-        System.out.println("totalScore = " + totalScore);
+        var score = customScorer.score(knight, Collections.emptyList());
+        System.out.println("score = " + score);
+        score = customScorer.score(knight, Collections.emptyList());
+        System.out.println("score = " + score);
     }
 }

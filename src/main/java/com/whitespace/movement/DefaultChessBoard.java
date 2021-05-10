@@ -1,8 +1,8 @@
-package com.whitespace;
+package com.whitespace.movement;
 
-import com.whitespace.movement.Move;
-import com.whitespace.movement.MoveResult;
-import com.whitespace.movement.Position;
+import com.whitespace.BestMoveService;
+import com.whitespace.ChessBoard;
+import com.whitespace.Player;
 import com.whitespace.piece.*;
 
 import java.util.ArrayList;
@@ -53,7 +53,7 @@ public class DefaultChessBoard implements ChessBoard {
                 }
 
             }, () -> {
-                System.out.println("Black wins!");
+                System.out.println("White has no move - Black wins!");
                 isPlaying.set(false);
             });
             System.out.println("White's move - end");
@@ -70,7 +70,7 @@ public class DefaultChessBoard implements ChessBoard {
                 }
 
             }, () -> {
-                System.out.println("White wins!");
+                System.out.println("Black has no move - White wins!");
                 isPlaying.set(false);
             });
             System.out.println("Black's move - end");

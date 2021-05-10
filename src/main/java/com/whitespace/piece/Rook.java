@@ -1,6 +1,6 @@
 package com.whitespace.piece;
 
-import com.whitespace.DefaultChessBoard;
+import com.whitespace.movement.DefaultChessBoard;
 import com.whitespace.ChessBoard;
 import com.whitespace.Player;
 import com.whitespace.movement.Move;
