@@ -2,33 +2,31 @@ package com.whitespace.ai;
 
 import com.whitespace.BoardScoreService;
 import com.whitespace.ChessBoard;
-import com.whitespace.Player;
-import com.whitespace.movement.Move;
 import com.whitespace.movement.Position;
-import com.whitespace.piece.*;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.TreeMap;
 
 public class CachingBoardScoringService implements BoardScoreService {
     private final Map<Integer, Double> cache = new TreeMap<>();
 
-    private final CustomScorer scorer;
+    private final BoardScoreService boardScoreService;
 
-    public CachingBoardScoringService(Player player, int middleModifier) {
+    public CachingBoardScoringService(BoardScoreService boardScoreService) {
+        this.boardScoreService = boardScoreService;
         loadFromDisk();
-        scorer = new CustomScorer(player, middleModifier);
     }
 
     @Override
     public double scoreBoard(ChessBoard chessBoard) {
         var hashCodeBuilder = new HashCodeBuilder();
-        chessBoard.getPieces().stream().forEach(piece -> {
+        chessBoard.getPieces().parallelStream().forEach(piece -> {
             hashCodeBuilder.append(piece.getClass());
             Position position = piece.getPosition();
             hashCodeBuilder.append(position.row());
@@ -41,31 +39,9 @@ public class CachingBoardScoringService implements BoardScoreService {
             return cache.get(hashCode);
         }
 
-        List<Move> moves = Collections.emptyList();
-        Double totalScore = chessBoard.getPieces().parallelStream()
-                .map(piece -> {
-                            var score = 0.0d;
-                            if (piece instanceof Rook rook) {
-                                score = scorer.score(rook, moves);
-                            } else if (piece instanceof Bishop bishop) {
-                                score = scorer.score(bishop, moves);
-                            } else if (piece instanceof Knight knight) {
-                                score = scorer.score(knight, moves);
-                            } else if (piece instanceof Queen queen) {
-                                score = scorer.score(queen, moves);
-                            } else if (piece instanceof King king) {
-                                score = scorer.score(king, moves);
-                            } else if (piece instanceof Pawn pawn) {
-                                score = scorer.score(pawn, moves);
-                            }
-                            return score;
-                        }
-                )
-                .collect(Collectors.reducing(Double::sum))
-                .orElse(Double.MIN_VALUE);
-
-        cache.put(hashCode, totalScore);
-        return totalScore;
+        var score = boardScoreService.scoreBoard(chessBoard);
+        cache.put(hashCode, score);
+        return score;
     }
 
     public void writeToDisk() {

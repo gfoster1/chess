@@ -4,6 +4,8 @@ import com.whitespace.BestMoveService;
 import com.whitespace.ChessBoard;
 import com.whitespace.Player;
 import com.whitespace.piece.*;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -220,10 +222,14 @@ public class DefaultChessBoard implements ChessBoard {
     }
 
     public boolean isInvalidMove(Move move) {
-        return isKingMovingIntoCheck(move);
+        return isKingMovingIntoCheck(move) || isKingInCheckAndDidNotMove(move);
     }
 
     private boolean isKingMovingIntoCheck(Move move) {
+        return false;
+    }
+
+    private boolean isKingInCheckAndDidNotMove(Move move) {
         return false;
     }
 
@@ -312,4 +318,19 @@ public class DefaultChessBoard implements ChessBoard {
         return pieceList;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (!(o instanceof DefaultChessBoard)) return false;
+
+        DefaultChessBoard that = (DefaultChessBoard) o;
+
+        return new EqualsBuilder().append(getPieces(), that.getPieces()).isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37).append(getPieces()).toHashCode();
+    }
 }

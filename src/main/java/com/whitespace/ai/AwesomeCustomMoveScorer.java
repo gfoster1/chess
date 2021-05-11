@@ -7,9 +7,9 @@ import com.whitespace.piece.*;
 
 import java.util.*;
 
-public class CustomScorer {
-    private static final double[] BLACK_PAWN_ROW_VALUES = {10, 6, 5, 3, 1.4, 1.2, 1, 1};
-    private static final double[] WHITE_PAWN_ROW_VALUES = {1, 1, 1.2, 1.4, 3, 5, 6, 10};
+public class AwesomeCustomMoveScorer {
+    private static final double[] BLACK_PAWN_ROW_VALUES = {10, 6, 5, 3, 2, 1.2, 1, 1};
+    private static final double[] WHITE_PAWN_ROW_VALUES = {1, 1, 1.2, 2, 3, 5, 6, 10};
 
     private final List<Rook> myRooks = new ArrayList<>(2);
     private final List<Rook> opponentsRooks = new ArrayList<>(2);
@@ -22,7 +22,7 @@ public class CustomScorer {
     private int opponentsBishops = 0;
     private int opponentsKnights = 0;
 
-    public CustomScorer(Player player, int middleModifier) {
+    public AwesomeCustomMoveScorer(Player player, int middleModifier) {
         this.player = player;
         this.middleModifier = middleModifier;
     }
@@ -66,7 +66,7 @@ public class CustomScorer {
             opennessModifier = .95;
         }
 
-        var positionalStrength = computePositionalStrengthScore(queen.getPosition());
+        var positionalStrength = computeColumnPositionalStrengthScore(queen.getPosition());
         var baseScore = (10 + positionalStrength) * opennessModifier;
         return calculateBoardScore(queen.getPlayer(), baseScore);
     }
@@ -80,7 +80,7 @@ public class CustomScorer {
             opennessModifier = .95;
         }
 
-        var positionalStrength = computePositionalStrengthScore(king.getPosition());
+        var positionalStrength = computeColumnPositionalStrengthScore(king.getPosition());
         var baseKingScore = 200 * opennessModifier + positionalStrength;
         return calculateBoardScore(king.getPlayer(), baseKingScore);
     }
@@ -107,7 +107,7 @@ public class CustomScorer {
             }
         }
 
-        var positionalStrength = computePositionalStrengthScore(bishop.getPosition());
+        var positionalStrength = computeColumnPositionalStrengthScore(bishop.getPosition());
         var baseBishopScore = (3.5 + positionalStrength) * opennessModifier + twoBishopModifier;
         return calculateBoardScore(bishop.getPlayer(), baseBishopScore);
     }
@@ -133,7 +133,7 @@ public class CustomScorer {
             }
         }
 
-        var positionalStrength = computePositionalStrengthScore(knight.getPosition());
+        var positionalStrength = computeColumnPositionalStrengthScore(knight.getPosition());
 
         var baseKnightScore = (3.25 + positionalStrength) * opennessModifier + twoKnightModifier;
         return calculateBoardScore(knight.getPlayer(), baseKnightScore);
@@ -149,7 +149,7 @@ public class CustomScorer {
             case white -> WHITE_PAWN_ROW_VALUES[pawn.getPosition().row()];
         };
 
-        var positionalStrength = computePositionalStrengthScore(pawn.getPosition());
+        var positionalStrength = computeColumnPositionalStrengthScore(pawn.getPosition());
 
         var basePawnScore = (1.0 + rowLocationScore + positionalStrength) * pawnOpennessModifier;
         return calculateBoardScore(pawn.getPlayer(), basePawnScore);
@@ -160,12 +160,12 @@ public class CustomScorer {
 
     }
 
-    private int computePositionalStrengthScore(Position position) {
+    private int computeColumnPositionalStrengthScore(Position position) {
         // I want to push the pieces closer to the middle of the board
         if (position.column() == 3 || position.column() == 4) {
             return middleModifier;
         } else if (position.column() == 2 || position.column() == 5) {
-            return Math.max(middleModifier - 1, 1);
+            return Math.max(middleModifier - 1, 0);
         }
         return 0;
     }

@@ -21,7 +21,7 @@ public class FastScoringService implements BoardScoreService {
 
     @Override
     public double scoreBoard(ChessBoard chessBoard) {
-        CustomScorer customScorer = new CustomScorer(player, middleModifier);
+        AwesomeCustomMoveScorer awesomeCustomMoveScorer = new AwesomeCustomMoveScorer(player, middleModifier);
         return chessBoard.getPieces().parallelStream()
                 .flatMap((Function<Piece, Stream<Move>>) piece -> piece.possibleMoves(chessBoard).parallelStream())
                 .collect(Collectors.groupingBy(move -> move.piece()))
@@ -32,17 +32,17 @@ public class FastScoringService implements BoardScoreService {
 
                     var score = 0.0d;
                     if (piece instanceof Rook rook) {
-                        score = customScorer.score(rook, moves);
+                        score = awesomeCustomMoveScorer.score(rook, moves);
                     } else if (piece instanceof Bishop bishop) {
-                        score = customScorer.score(bishop, moves);
+                        score = awesomeCustomMoveScorer.score(bishop, moves);
                     } else if (piece instanceof Knight knight) {
-                        score = customScorer.score(knight, moves);
+                        score = awesomeCustomMoveScorer.score(knight, moves);
                     } else if (piece instanceof Queen queen) {
-                        score = customScorer.score(queen, moves);
+                        score = awesomeCustomMoveScorer.score(queen, moves);
                     } else if (piece instanceof King king) {
-                        score = customScorer.score(king, moves);
+                        score = awesomeCustomMoveScorer.score(king, moves);
                     } else if (piece instanceof Pawn pawn) {
-                        score = customScorer.score(pawn, moves);
+                        score = awesomeCustomMoveScorer.score(pawn, moves);
                     }
                     return score;
                 })
