@@ -1,10 +1,10 @@
-package com.whitespace.ai;
+package com.whitespace.ai.scoring;
 
 import com.whitespace.BoardScoreService;
 import com.whitespace.ChessBoard;
 import com.whitespace.Player;
-import com.whitespace.movement.Move;
-import com.whitespace.piece.*;
+import com.whitespace.board.Move;
+import com.whitespace.board.piece.*;
 
 import java.util.function.Function;
 import java.util.stream.Collectors;

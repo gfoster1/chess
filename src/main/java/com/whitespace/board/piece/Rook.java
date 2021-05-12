@@ -1,10 +1,10 @@
-package com.whitespace.piece;
+package com.whitespace.board.piece;
 
-import com.whitespace.movement.DefaultChessBoard;
+import com.whitespace.board.DefaultChessBoard;
 import com.whitespace.ChessBoard;
 import com.whitespace.Player;
-import com.whitespace.movement.Move;
-import com.whitespace.movement.Position;
+import com.whitespace.board.Move;
+import com.whitespace.board.Position;
 
 import java.util.Arrays;
 import java.util.Comparator;

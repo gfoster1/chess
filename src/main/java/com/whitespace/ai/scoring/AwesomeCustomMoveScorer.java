@@ -1,15 +1,16 @@
-package com.whitespace.ai;
+package com.whitespace.ai.scoring;
 
 import com.whitespace.Player;
-import com.whitespace.movement.Move;
-import com.whitespace.movement.Position;
-import com.whitespace.piece.*;
+import com.whitespace.board.Move;
+import com.whitespace.board.Position;
+import com.whitespace.board.piece.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AwesomeCustomMoveScorer {
-    private static final double[] BLACK_PAWN_ROW_VALUES = {10, 6, 5, 3, 2, 1.2, 1, 1};
-    private static final double[] WHITE_PAWN_ROW_VALUES = {1, 1, 1.2, 2, 3, 5, 6, 10};
+    private static final double[] BLACK_PAWN_ROW_VALUES = {10, 6, 5, 2.2, 1.4, 1.2, 1, 1};
+    private static final double[] WHITE_PAWN_ROW_VALUES = {1, 1, 1.2, 1.4, 2.2, 5, 6, 10};
 
     private final List<Rook> myRooks = new ArrayList<>(2);
     private final List<Rook> opponentsRooks = new ArrayList<>(2);
@@ -58,11 +59,13 @@ public class AwesomeCustomMoveScorer {
     protected double score(Queen queen, List<Move> moves) {
         var opennessModifier = 1.0;
         int size = moves.size();
-        if (size >= 5 && size < 10) {
-            opennessModifier = 1.05;
-        } else if (size >= 10) {
+        if (size >= 10) {
+            opennessModifier = 1.2;
+        } else if (size >= 8) {
+            opennessModifier = 1.15;
+        } else if (size >= 4) {
             opennessModifier = 1.1;
-        } else if (size < 5) {
+        } else if (size <= 2) {
             opennessModifier = .95;
         }
 

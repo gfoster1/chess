@@ -1,12 +1,11 @@
-package com.whitespace.ai;
+package com.whitespace.ai.scoring;
 
 import com.whitespace.BoardScoreService;
 import com.whitespace.ChessBoard;
-import com.whitespace.movement.Position;
+import com.whitespace.board.Position;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Map;
@@ -14,6 +13,7 @@ import java.util.Scanner;
 import java.util.TreeMap;
 
 public class CachingBoardScoringService implements BoardScoreService {
+    private final String cacheFileName = "cache.txt";
     private final Map<Integer, Double> cache = new TreeMap<>();
 
     private final BoardScoreService boardScoreService;
@@ -47,7 +47,7 @@ public class CachingBoardScoringService implements BoardScoreService {
     public void writeToDisk() {
         System.out.println("Writing the cache to disk");
         try {
-            var fileWriter = new FileWriter("cache.txt");
+            var fileWriter = new FileWriter(cacheFileName);
             cache.forEach((key, value) -> {
                 try {
                     fileWriter.write(key + ":" + value + System.lineSeparator());
@@ -64,28 +64,26 @@ public class CachingBoardScoringService implements BoardScoreService {
     }
 
     public void loadFromDisk() {
-        var file = new File("cache.txt");
-        if (!file.exists()) {
-            return;
-        }
-
-        System.out.println("Loading the cache file");
-        Scanner scanner = null;
-        try {
-            scanner = new Scanner(file);
-            while (scanner.hasNextLine()) {
-                String[] data = scanner.nextLine().split(":");
-                var key = Integer.parseInt(data[0]);
-                var value = Double.parseDouble(data[1]);
-                cache.put(key, value);
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } finally {
-            if (scanner != null) {
-                scanner.close();
-                System.out.println("Cache file load complete");
-            }
+        var file = new File(cacheFileName);
+        if (file.exists()) {
+            System.out.println("Loading the cache file");
+            Scanner scanner = null;
+//            try {
+//                scanner = new Scanner(file);
+//                while (scanner.hasNextLine()) {
+//                    String[] data = scanner.nextLine().split(":");
+//                    var key = Integer.parseInt(data[0]);
+//                    var value = Double.parseDouble(data[1]);
+//                    cache.put(key, value);
+//                }
+//            } catch (FileNotFoundException e) {
+//                e.printStackTrace();
+//            } finally {
+//                if (scanner != null) {
+//                    scanner.close();
+//                    System.out.println("Cache file load complete");
+//                }
+//            }
         }
     }
 }

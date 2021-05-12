@@ -1,9 +1,9 @@
-package com.whitespace.ai;
+package com.whitespace.ai.scoring;
 
-import com.whitespace.ChessBoard;
 import com.whitespace.BoardScoreService;
+import com.whitespace.ChessBoard;
 import com.whitespace.Player;
-import com.whitespace.piece.*;
+import com.whitespace.board.piece.*;
 
 import java.util.HashMap;
 import java.util.Map;

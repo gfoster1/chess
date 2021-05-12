@@ -1,6 +1,6 @@
 package com.whitespace;
 
-import com.whitespace.movement.Move;
+import com.whitespace.board.Move;
 
 import java.util.Optional;
 

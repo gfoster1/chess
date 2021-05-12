@@ -1,17 +1,17 @@
-package com.whitespace.movement;
+package com.whitespace.board;
 
 import com.whitespace.BestMoveService;
 import com.whitespace.ChessBoard;
 import com.whitespace.Player;
-import com.whitespace.piece.*;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
+import com.whitespace.board.piece.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 public class DefaultChessBoard implements ChessBoard {
     public static final int MAX_BOARD_SIZE = 8;
@@ -142,7 +142,7 @@ public class DefaultChessBoard implements ChessBoard {
 
     public MoveResult applyMove(Move move, boolean debug) {
         var currentPlayerWins = new AtomicBoolean(false);
-        if (isInvalidMove(move)) {
+        if (!debug && isInvalidMove(move)) {
             return new MoveResult(null, null, null, null, false, false);
         }
 
@@ -221,16 +221,42 @@ public class DefaultChessBoard implements ChessBoard {
         return p.getPlayer().equals(player);
     }
 
-    public boolean isInvalidMove(Move move) {
+    private boolean isInvalidMove(Move move) {
         return isKingMovingIntoCheck(move) || isKingInCheckAndDidNotMove(move);
     }
 
     private boolean isKingMovingIntoCheck(Move move) {
-        return false;
+        var currentPieceToMove = move.piece();
+        var kingMovingIntoCheck = false;
+
+        if (currentPieceToMove instanceof King king) {
+            applyMove(move, false);
+            ChessBoard chessBoard = this;
+            kingMovingIntoCheck = pieceList.parallelStream()
+                    .filter(piece -> !piece.getPlayer().equals(piece.getPlayer()))
+                    .flatMap((Function<Piece, Stream<Move>>) opponentsPiece -> opponentsPiece.possibleMoves(chessBoard).parallelStream())
+                    .filter(opponentMove -> opponentMove.destination().equals(move.destination()))
+                    .count() >= 1;
+            revertLastMove();
+        }
+        return kingMovingIntoCheck;
     }
 
     private boolean isKingInCheckAndDidNotMove(Move move) {
-        return false;
+        var currentPlayer = move.piece().getPlayer();
+        var currentPlayerKing = pieceList.parallelStream()
+                .filter(piece -> (piece instanceof King) && piece.getPlayer().equals(currentPlayer))
+                .findFirst()
+                .get();
+
+        ChessBoard chessBoard = this;
+        var kingIsInCheck = pieceList.parallelStream()
+                .filter(piece -> !piece.getPlayer().equals(piece.getPlayer()))
+                .flatMap((Function<Piece, Stream<Move>>) piece -> piece.possibleMoves(chessBoard).parallelStream())
+                .filter(opponentMove -> opponentMove.destination().equals(currentPlayerKing.getPosition()))
+                .count() >= 1;
+
+        return kingIsInCheck && !(move.piece() instanceof King);
     }
 
     private boolean isPawnDoingEnpassant(Player player, Position destination) {
@@ -316,21 +342,5 @@ public class DefaultChessBoard implements ChessBoard {
 
     public List<Piece> getPieces() {
         return pieceList;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-
-        if (!(o instanceof DefaultChessBoard)) return false;
-
-        DefaultChessBoard that = (DefaultChessBoard) o;
-
-        return new EqualsBuilder().append(getPieces(), that.getPieces()).isEquals();
-    }
-
-    @Override
-    public int hashCode() {
-        return new HashCodeBuilder(17, 37).append(getPieces()).toHashCode();
     }
 }

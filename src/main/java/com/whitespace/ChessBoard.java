@@ -1,9 +1,9 @@
 package com.whitespace;
 
-import com.whitespace.movement.Move;
-import com.whitespace.movement.MoveResult;
-import com.whitespace.movement.Position;
-import com.whitespace.piece.Piece;
+import com.whitespace.board.Move;
+import com.whitespace.board.MoveResult;
+import com.whitespace.board.Position;
+import com.whitespace.board.piece.Piece;
 
 import java.util.Collection;
 import java.util.Optional;

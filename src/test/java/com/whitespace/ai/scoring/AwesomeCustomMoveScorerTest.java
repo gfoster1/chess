@@ -1,9 +1,9 @@
-package com.whitespace.ai;
+package com.whitespace.ai.scoring;
 
 import com.whitespace.ChessBoard;
 import com.whitespace.Player;
-import com.whitespace.movement.Position;
-import com.whitespace.piece.Knight;
+import com.whitespace.board.Position;
+import com.whitespace.board.piece.Knight;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
