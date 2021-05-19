@@ -92,9 +92,9 @@ public class AwesomeCustomMoveScorer {
         var opennessModifier = 1.0;
         int size = moves.size();
         if (size >= 5) {
-            opennessModifier = 1.1;
+            opennessModifier = 1.2;
         } else if (size > 2) {
-            opennessModifier = 1.05;
+            opennessModifier = 1.1;
         } else if (size <= 2) {
             opennessModifier = .95;
         }
@@ -119,8 +119,8 @@ public class AwesomeCustomMoveScorer {
         var opennessModifier = switch (moves.size()) {
             case 0 -> .7;
             case 1 -> .8;
-            case 2 -> 1.0;
-            case 3 -> 1.2;
+            case 2 -> 1.1;
+            case 3 -> 1.3;
             case 4 -> 1.5;
             default -> 1;
         };

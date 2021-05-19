@@ -5,13 +5,12 @@ import com.whitespace.BoardScoreService;
 import com.whitespace.ChessBoard;
 import com.whitespace.Player;
 import com.whitespace.board.Move;
+import com.whitespace.board.MoveResult;
 import com.whitespace.board.piece.Piece;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
 import java.util.stream.Stream;
 
 public class DefaultBestMoveService implements BestMoveService {
@@ -26,57 +25,57 @@ public class DefaultBestMoveService implements BestMoveService {
     }
 
     public Optional<Move> findBestMove(ChessBoard chessBoard) {
-        var scores = new HashMap<Move, DoubleStream.Builder>();
+        var scores = new HashMap<Move, List<Double>>();
         findBestMove(chessBoard, 0, null, scores);
         List<ScoredMove> scoredMoves = scores.entrySet().parallelStream()
                 .map(entry -> {
-                    DoubleSummaryStatistics summaryStatistics = entry.getValue().build().summaryStatistics();
+                    DoubleSummaryStatistics summaryStatistics = entry.getValue().stream()
+                            .mapToDouble(value -> value.doubleValue())
+                            .summaryStatistics();
+                    double variance = entry.getValue().parallelStream()
+                            .mapToDouble(value -> value.doubleValue())
+                            .map(operand -> Math.pow(operand - summaryStatistics.getAverage(), 2))
+                            .sum() / summaryStatistics.getCount() - 1;
                     Move move = entry.getKey();
-                    return new ScoredMove(move, summaryStatistics);
+                    return new ScoredMove(move, summaryStatistics, variance);
                 })
-                .filter(new Predicate<ScoredMove>() {
-                    @Override
-                    public boolean test(ScoredMove scoredMove) {
-                        return scoredMove.doubleSummaryStatistics().getMin() > -20;
+                .filter(scoredMove -> {
+                    int lossThreshHold = -100;
+                    return scoredMove.doubleSummaryStatistics().getMin() > lossThreshHold;
+                })
+                .sorted((o1, o2) -> {
+                    DoubleSummaryStatistics o1Stats = o1.doubleSummaryStatistics();
+                    DoubleSummaryStatistics o2Stats = o2.doubleSummaryStatistics();
+                    double d1 = (o1Stats.getMax() + o1Stats.getAverage()) / Math.sqrt(o1.variance);
+                    double d2 = (o1Stats.getMax() + o2Stats.getAverage()) / Math.sqrt(o2.variance);
+                    int compare = Double.compare(d2, d1);
+                    if (compare == 0) {
+                        compare = Double.compare(o2Stats.getMax(), o1Stats.getMax());
                     }
-                })
-                .sorted(new Comparator<ScoredMove>() {
-                    @Override
-                    public int compare(ScoredMove o1, ScoredMove o2) {
-                        DoubleSummaryStatistics o1Stats = o1.doubleSummaryStatistics();
-                        DoubleSummaryStatistics o2Stats = o2.doubleSummaryStatistics();
-                        int compare = Double.compare(o2Stats.getMax(), o1Stats.getMax());
-                        if (compare == 0) {
-                            compare = Double.compare(o2Stats.getAverage(), o1Stats.getAverage());
-                        }
 
-                        if (compare == 0) {
-                            compare = Double.compare(o2Stats.getMin(), o1Stats.getMin());
-                        }
-                        return compare;
+                    if (compare == 0) {
+                        compare = Double.compare(o1Stats.getMin(), o2Stats.getMin());
                     }
+                    return compare;
                 })
                 .collect(Collectors.toList());
         var optimalMove = scoredMoves.isEmpty() ? null : scoredMoves.get(0).move();
         return Optional.ofNullable(optimalMove);
     }
 
-    private void findBestMove(ChessBoard chessBoard, int currentDepth, Move originalMove, Map<Move, DoubleStream.Builder> scores) {
+    private void findBestMove(ChessBoard chessBoard, int currentDepth, Move originalMove, Map<Move, List<Double>> scores) {
+        int maxScoresPerMove = 1000;
+        if (originalMove != null && scores.get(originalMove).size() >= maxScoresPerMove) {
+            return;
+        }
+
         if (currentDepth == maxDepth) {
             if (originalMove == null) {
                 System.out.println("We have a problem");
                 return;
             }
-            var score = boardScoreService.scoreBoard(chessBoard);
-            scores.compute(originalMove,
-                    (move, builder) -> {
-                        DoubleStream.Builder b = builder;
-                        if (builder == null) {
-                            b = DoubleStream.builder();
-                        }
-                        return b;
-                    })
-                    .add(score);
+
+            scores.get(originalMove).add(boardScoreService.scoreBoard(chessBoard));
             return;
         }
 
@@ -86,34 +85,56 @@ public class DefaultBestMoveService implements BestMoveService {
                 .collect(Collectors.toSet());
 
         for (Move myMove : myMoves) {
-            chessBoard.applyMove(myMove, false);
-//            var badMoveThreshHold = -10;
-//            var myMoveNoBrainerThreshHold = 50;
-//            var myMoveScore = boardScoreService.scoreBoard(chessBoard);
-//            if (myMoveScore > myMoveNoBrainerThreshHold) {
-//                scores.compute(originalMove, (move1, doubles) -> doubles == null ? new ArrayList<>() : doubles)
-//                        .add(myMoveScore);
-//                chessBoard.revertLastMove();
-//                break;
-//            }
+            if (currentDepth == 0) {
+                scores.put(myMove, new ArrayList<>(maxScoresPerMove));
+            }
 
-//            if (myMoveScore > badMoveThreshHold) {
+            double winValue = 200 / (currentDepth + 1);
+            double loseValue = -200 / (currentDepth + 1);
+            var move = originalMove == null ? myMove : originalMove;
+            MoveResult myMoveResult = chessBoard.applyMove(myMove, false);
+            if (myMoveResult.opponentWins()) {
+                scores.get(move).add(loseValue);
+                chessBoard.revertLastMove();
+                break;
+            }
+
+            if (myMoveResult.currentPlayerWins()) {
+                scores.get(move).add(winValue);
+                chessBoard.revertLastMove();
+                break;
+            }
+
             var opponentsMoves = chessBoard.getPieces().parallelStream()
                     .filter(piece -> !piece.getPlayer().equals(player))
                     .flatMap((Function<Piece, Stream<Move>>) piece -> piece.possibleMoves(chessBoard).parallelStream())
                     .collect(Collectors.toSet());
 
-            var move = originalMove == null ? myMove : originalMove;
+            winValue = 200 / (currentDepth + 2);
+            loseValue = -200 / (currentDepth + 2);
             for (Move opponentsMove : opponentsMoves) {
-                chessBoard.applyMove(opponentsMove, false);
+                MoveResult opponentMoveResult = chessBoard.applyMove(opponentsMove, false);
+                if (opponentMoveResult.currentPlayerWins()) {
+                    // bad bad move
+                    scores.get(move).add(loseValue);
+                    chessBoard.revertLastMove();
+                    break;
+                }
+
+                if (opponentMoveResult.opponentWins()) {
+                    // sweet move dude
+                    scores.get(move).add(winValue);
+                    chessBoard.revertLastMove();
+                    break;
+                }
+
                 findBestMove(chessBoard, currentDepth + 1, move, scores);
                 chessBoard.revertLastMove();
             }
-//            }
             chessBoard.revertLastMove();
         }
     }
 
-    private record ScoredMove(Move move, DoubleSummaryStatistics doubleSummaryStatistics) {
+    private record ScoredMove(Move move, DoubleSummaryStatistics doubleSummaryStatistics, double variance) {
     }
 }

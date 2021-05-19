@@ -1,5 +1,6 @@
 package com.whitespace;
 
+import com.whitespace.ai.movement.DecisionTreeBestMoveService;
 import com.whitespace.ai.movement.DefaultBestMoveService;
 import com.whitespace.ai.scoring.CachingBoardScoringService;
 import com.whitespace.ai.scoring.DefaultBoardScoringService;
@@ -8,20 +9,22 @@ import com.whitespace.board.DefaultChessBoard;
 
 public class ChessApplication {
     public static void main(String[] args) {
-        var blackBoardService = new DefaultBestMoveService(Player.black, 1, new DefaultBoardScoringService(Player.black, 5));
+        var blackBoardService = new DefaultBestMoveService(Player.black, 1, new DefaultBoardScoringService(Player.black, 3));
 
         BestMoveService whiteBoardService;
+        var fastScoringService = new FastScoringService(Player.white, 3);
         boolean useCaching = false;
+        int maxDepth = 4;
         if (useCaching) {
-            var whiteScoringService = new CachingBoardScoringService(new FastScoringService(Player.white, 3));
-            whiteBoardService = new DefaultBestMoveService(Player.white, 2, whiteScoringService);
+            var cachingBoardScoringService = new CachingBoardScoringService(fastScoringService);
+            whiteBoardService = new DecisionTreeBestMoveService(Player.white, maxDepth, cachingBoardScoringService);
         } else {
-            whiteBoardService = new DefaultBestMoveService(Player.white, 2, new FastScoringService(Player.white, 3));
+            whiteBoardService = new DecisionTreeBestMoveService(Player.white, maxDepth, fastScoringService);
         }
-        var board = new DefaultChessBoard(blackBoardService, whiteBoardService);
+//        var board = new DefaultChessBoard(blackBoardService, whiteBoardService);
 
-        board.play();
-
+        new DefaultChessBoard(blackBoardService, whiteBoardService).play();
+//        new DefaultChessBoard(blackBoardService, whiteBoardService).play();
         if (useCaching) {
 //        whiteScoringService.writeToDisk();
         }

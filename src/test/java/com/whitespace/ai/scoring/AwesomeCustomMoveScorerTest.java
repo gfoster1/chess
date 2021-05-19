@@ -25,4 +25,9 @@ class AwesomeCustomMoveScorerTest {
         score = awesomeCustomMoveScorer.score(knight, Collections.emptyList());
         System.out.println("score = " + score);
     }
+
+    @Test
+    public void scoreWinningMoveToTakeAKing() {
+
+    }
 }
