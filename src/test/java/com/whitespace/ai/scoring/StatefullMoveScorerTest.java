@@ -10,9 +10,9 @@ import org.mockito.Mockito;
 import java.util.Collections;
 import java.util.Optional;
 
-class AwesomeCustomMoveScorerTest {
+class StatefullMoveScorerTest {
     ChessBoard chessBoard = Mockito.mock(ChessBoard.class);
-    AwesomeCustomMoveScorer awesomeCustomMoveScorer = new AwesomeCustomMoveScorer(Player.white, 3);
+    StatefullMoveScorer statefullMoveScorer = new StatefullMoveScorer(Player.white, 3);
 
     @Test
     public void scoreKnights() {
@@ -20,9 +20,11 @@ class AwesomeCustomMoveScorerTest {
         Mockito.when(chessBoard.getPosition(Mockito.anyInt(), Mockito.anyInt())).thenReturn(Optional.of(position));
         Mockito.when(chessBoard.isSpaceTakenByMyPiece(Mockito.any(), Mockito.any())).thenReturn(false);
         Knight knight = new Knight(Player.white, position);
-        var score = awesomeCustomMoveScorer.score(knight, Collections.emptyList());
+        statefullMoveScorer.score(knight, Collections.emptyList());
+        var score = statefullMoveScorer.calculateFinalScore();
         System.out.println("score = " + score);
-        score = awesomeCustomMoveScorer.score(knight, Collections.emptyList());
+        statefullMoveScorer.score(knight, Collections.emptyList());
+        score = statefullMoveScorer.calculateFinalScore();
         System.out.println("score = " + score);
     }
 

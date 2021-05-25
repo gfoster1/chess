@@ -374,6 +374,13 @@ public class DefaultChessBoard implements ChessBoard {
     }
 
     @Override
+    public Stream<Move> getPossibleMoves(Player player) {
+        return pieceList.parallelStream()
+                .filter(piece -> piece.getPlayer().equals(player))
+                .flatMap((Function<Piece, Stream<Move>>) piece -> piece.possibleMoves(this).parallelStream());
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
 

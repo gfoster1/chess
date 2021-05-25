@@ -12,7 +12,7 @@ public class ChessApplication {
         var blackBoardService = new DefaultBestMoveService(Player.black, 1, new DefaultBoardScoringService(Player.black, 3));
 
         BestMoveService whiteBoardService;
-        var fastScoringService = new FastScoringService(Player.white, 3);
+        var fastScoringService = new FastScoringService(Player.white, 0);
         boolean useCaching = false;
         int maxDepth = 4;
         if (useCaching) {

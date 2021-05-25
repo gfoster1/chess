@@ -8,7 +8,7 @@ import com.whitespace.board.piece.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AwesomeCustomMoveScorer {
+public class StatefullMoveScorer {
     private static final double[] BLACK_PAWN_ROW_VALUES = {10, 6, 5, 2.2, 1.4, 1.2, 1, 1};
     private static final double[] WHITE_PAWN_ROW_VALUES = {1, 1, 1.2, 1.4, 2.2, 5, 6, 10};
 
@@ -18,17 +18,20 @@ public class AwesomeCustomMoveScorer {
     private final Player player;
     private final int middleModifier;
 
+    private boolean myKingTaken = true;
+    private boolean opponentKingTaken = true;
     private int myKnights = 0;
     private int myBishops = 0;
     private int opponentsBishops = 0;
     private int opponentsKnights = 0;
+    private double score = 0;
 
-    public AwesomeCustomMoveScorer(Player player, int middleModifier) {
+    public StatefullMoveScorer(Player player, int middleModifier) {
         this.player = player;
         this.middleModifier = middleModifier;
     }
 
-    protected double score(Rook rook, List<Move> moves) {
+    protected void score(Rook rook, List<Move> moves) {
         var opennessModifier = 1.0;
         int size = moves.size();
         if (size >= 4) {
@@ -53,10 +56,10 @@ public class AwesomeCustomMoveScorer {
 //        var positionalStrength = computePositionalStrengthScore(rook.getPosition());
 
         var baseRookScore = 5 * opennessModifier + twoRookModifier;
-        return calculateBoardScore(rook.getPlayer(), baseRookScore);
+        calculateBoardScore(rook.getPlayer(), baseRookScore);
     }
 
-    protected double score(Queen queen, List<Move> moves) {
+    protected void score(Queen queen, List<Move> moves) {
         var opennessModifier = 1.0;
         int size = moves.size();
         if (size >= 10) {
@@ -71,10 +74,16 @@ public class AwesomeCustomMoveScorer {
 
         var positionalStrength = computeColumnPositionalStrengthScore(queen.getPosition());
         var baseScore = (10 + positionalStrength) * opennessModifier;
-        return calculateBoardScore(queen.getPlayer(), baseScore);
+        calculateBoardScore(queen.getPlayer(), baseScore);
     }
 
-    protected double score(King king, List<Move> moves) {
+    protected void score(King king, List<Move> moves) {
+        if (king.getPlayer().equals(player)) {
+            myKingTaken = false;
+        } else {
+            opponentKingTaken = false;
+        }
+
         var opennessModifier = 1.0;
         int size = moves.size();
         if (size > 3) {
@@ -85,10 +94,10 @@ public class AwesomeCustomMoveScorer {
 
         var positionalStrength = computeColumnPositionalStrengthScore(king.getPosition());
         var baseKingScore = 200 * opennessModifier + positionalStrength;
-        return calculateBoardScore(king.getPlayer(), baseKingScore);
+        calculateBoardScore(king.getPlayer(), baseKingScore);
     }
 
-    protected double score(Bishop bishop, List<Move> moves) {
+    protected void score(Bishop bishop, List<Move> moves) {
         var opennessModifier = 1.0;
         int size = moves.size();
         if (size >= 5) {
@@ -112,10 +121,10 @@ public class AwesomeCustomMoveScorer {
 
         var positionalStrength = computeColumnPositionalStrengthScore(bishop.getPosition());
         var baseBishopScore = (3.5 + positionalStrength) * opennessModifier + twoBishopModifier;
-        return calculateBoardScore(bishop.getPlayer(), baseBishopScore);
+        calculateBoardScore(bishop.getPlayer(), baseBishopScore);
     }
 
-    protected double score(Knight knight, List<Move> moves) {
+    protected void score(Knight knight, List<Move> moves) {
         var opennessModifier = switch (moves.size()) {
             case 0 -> .7;
             case 1 -> .8;
@@ -139,10 +148,10 @@ public class AwesomeCustomMoveScorer {
         var positionalStrength = computeColumnPositionalStrengthScore(knight.getPosition());
 
         var baseKnightScore = (3.25 + positionalStrength) * opennessModifier + twoKnightModifier;
-        return calculateBoardScore(knight.getPlayer(), baseKnightScore);
+        calculateBoardScore(knight.getPlayer(), baseKnightScore);
     }
 
-    protected double score(Pawn pawn, List<Move> moves) {
+    protected void score(Pawn pawn, List<Move> moves) {
         var pawnOpennessModifier = switch (moves.size()) {
             default -> 1;
         };
@@ -155,11 +164,12 @@ public class AwesomeCustomMoveScorer {
         var positionalStrength = computeColumnPositionalStrengthScore(pawn.getPosition());
 
         var basePawnScore = (1.0 + rowLocationScore + positionalStrength) * pawnOpennessModifier;
-        return calculateBoardScore(pawn.getPlayer(), basePawnScore);
+        calculateBoardScore(pawn.getPlayer(), basePawnScore);
     }
 
     private double calculateBoardScore(Player piecePlayer, double pieceScore) {
-        return piecePlayer.equals(player) ? pieceScore : pieceScore * -1;
+        var calculatePieceScore = piecePlayer.equals(player) ? pieceScore : pieceScore * -1;
+        return score = score + calculatePieceScore;
 
     }
 
@@ -173,4 +183,17 @@ public class AwesomeCustomMoveScorer {
         return 0;
     }
 
+    public double calculateFinalScore() {
+        // is king taken from the board
+        if (myKingTaken) {
+            return -200;
+        }
+
+        if (opponentKingTaken) {
+            return 200;
+        }
+
+        // is king in check and can't move
+        return score;
+    }
 }

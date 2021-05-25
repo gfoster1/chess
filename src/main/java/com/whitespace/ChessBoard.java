@@ -7,6 +7,7 @@ import com.whitespace.board.piece.Piece;
 
 import java.util.Collection;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public interface ChessBoard {
     void play();
@@ -24,4 +25,6 @@ public interface ChessBoard {
     boolean isSpaceTaken(Position position);
 
     Collection<Piece> getPieces();
+
+    Stream<Move> getPossibleMoves(Player player);
 }
