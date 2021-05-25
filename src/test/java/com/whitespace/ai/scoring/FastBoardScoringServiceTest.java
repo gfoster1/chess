@@ -11,8 +11,8 @@ import org.mockito.Mockito;
 import java.util.ArrayList;
 import java.util.Collection;
 
-class FastScoringServiceTest {
-    FastScoringService fastScoringService = new FastScoringService(Player.white, 3);
+class FastBoardScoringServiceTest {
+    FastBoardScoringService fastBoardScoringService = new FastBoardScoringService(Player.white, 3);
 
     @Test
     public void testBoard() {
@@ -45,7 +45,7 @@ class FastScoringServiceTest {
         Mockito.when(chessBoard.isSpaceTaken(Mockito.any())).thenReturn(false);
         Mockito.when(chessBoard.isSpaceTakenByOpposingPlayerPiece(Mockito.any(Position.class), Mockito.any(Player.class))).thenReturn(false);
         Mockito.when(chessBoard.isSpaceTakenByOpposingPlayerPiece(new Position(4, 5), Player.white)).thenReturn(true);
-        double scoreBoard = fastScoringService.scoreBoard(chessBoard);
+        double scoreBoard = fastBoardScoringService.scoreBoard(chessBoard);
         Assertions.assertEquals(123, scoreBoard);
     }
 }

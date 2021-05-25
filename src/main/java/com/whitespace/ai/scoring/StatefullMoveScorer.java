@@ -53,7 +53,6 @@ public class StatefullMoveScorer {
             }
 
         }
-//        var positionalStrength = computePositionalStrengthScore(rook.getPosition());
 
         var baseRookScore = 5 * opennessModifier + twoRookModifier;
         calculateBoardScore(rook.getPlayer(), baseRookScore);
@@ -63,13 +62,13 @@ public class StatefullMoveScorer {
         var opennessModifier = 1.0;
         int size = moves.size();
         if (size >= 10) {
-            opennessModifier = 1.2;
+            opennessModifier = 1.13;
         } else if (size >= 8) {
-            opennessModifier = 1.15;
-        } else if (size >= 4) {
             opennessModifier = 1.1;
+        } else if (size >= 4) {
+            opennessModifier = 1.07;
         } else if (size <= 2) {
-            opennessModifier = .95;
+            opennessModifier = .98;
         }
 
         var positionalStrength = computeColumnPositionalStrengthScore(queen.getPosition());
@@ -86,10 +85,8 @@ public class StatefullMoveScorer {
 
         var opennessModifier = 1.0;
         int size = moves.size();
-        if (size > 3) {
-            opennessModifier = 1.05;
-        } else if (size < 2) {
-            opennessModifier = .95;
+        if (size >= 5) {
+            opennessModifier = 1.02;
         }
 
         var positionalStrength = computeColumnPositionalStrengthScore(king.getPosition());
@@ -170,7 +167,6 @@ public class StatefullMoveScorer {
     private double calculateBoardScore(Player piecePlayer, double pieceScore) {
         var calculatePieceScore = piecePlayer.equals(player) ? pieceScore : pieceScore * -1;
         return score = score + calculatePieceScore;
-
     }
 
     private int computeColumnPositionalStrengthScore(Position position) {
@@ -191,6 +187,14 @@ public class StatefullMoveScorer {
 
         if (opponentKingTaken) {
             return 200;
+        }
+
+        if (myRooks.size() == 2) {
+
+        }
+
+        if (opponentsRooks.size() == 2) {
+            
         }
 
         // is king in check and can't move

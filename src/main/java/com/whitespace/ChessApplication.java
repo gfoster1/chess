@@ -4,7 +4,7 @@ import com.whitespace.ai.movement.DecisionTreeBestMoveService;
 import com.whitespace.ai.movement.DefaultBestMoveService;
 import com.whitespace.ai.scoring.CachingBoardScoringService;
 import com.whitespace.ai.scoring.DefaultBoardScoringService;
-import com.whitespace.ai.scoring.FastScoringService;
+import com.whitespace.ai.scoring.FastBoardScoringService;
 import com.whitespace.board.DefaultChessBoard;
 
 public class ChessApplication {
@@ -12,9 +12,9 @@ public class ChessApplication {
         var blackBoardService = new DefaultBestMoveService(Player.black, 1, new DefaultBoardScoringService(Player.black, 3));
 
         BestMoveService whiteBoardService;
-        var fastScoringService = new FastScoringService(Player.white, 0);
+        var fastScoringService = new FastBoardScoringService(Player.white, 0);
         boolean useCaching = false;
-        int maxDepth = 4;
+        int maxDepth = 3;
         if (useCaching) {
             var cachingBoardScoringService = new CachingBoardScoringService(fastScoringService);
             whiteBoardService = new DecisionTreeBestMoveService(Player.white, maxDepth, cachingBoardScoringService);

@@ -246,7 +246,8 @@ public class DefaultChessBoard implements ChessBoard {
     }
 
     private boolean isInvalidMove(Move move) {
-        return isKingMovingIntoCheck(move) || isKingInCheckAndDidNotMove(move);
+        return false;
+//        return isKingMovingIntoCheck(move) || isKingInCheckAndDidNotMove(move);
     }
 
     private boolean isKingMovingIntoCheck(Move move) {

@@ -5,11 +5,11 @@ import com.whitespace.ChessBoard;
 import com.whitespace.Player;
 import com.whitespace.board.piece.*;
 
-public class FastScoringService implements BoardScoreService {
+public class FastBoardScoringService implements BoardScoreService {
     private final Player player;
     private final int middleModifier;
 
-    public FastScoringService(Player player, int middleModifier) {
+    public FastBoardScoringService(Player player, int middleModifier) {
         this.player = player;
         this.middleModifier = middleModifier;
     }
