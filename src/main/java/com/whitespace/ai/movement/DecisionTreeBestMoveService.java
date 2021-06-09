@@ -5,7 +5,6 @@ import com.whitespace.BoardScoreService;
 import com.whitespace.ChessBoard;
 import com.whitespace.Player;
 import com.whitespace.board.Move;
-import com.whitespace.board.MoveResult;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -67,20 +66,23 @@ public class DecisionTreeBestMoveService implements BestMoveService {
                     .collect(Collectors.toSet());
 
             for (Move move : moves) {
-                var topLevelMove = originalMove == null
-                        ? move
-                        : originalMove;
-
-                MoveResult moveResult = chessBoard.applyMove(move, false);
+                var topLevelMove = originalMove == null ? move : originalMove;
+                var moveResult = chessBoard.applyMove(move, false);
 
                 ScoredMove currentScoredMove;
                 if (moveResult.currentPlayerWins()) {
-                    currentScoredMove = determineWhichCurrentPlayerWins(currentPlayer, topLevelMove, chessBoard);
+                    var score = currentPlayer.equals(player)
+                            ? winningScore
+                            : losingScore;
+                    currentScoredMove = new ScoredMove(score, topLevelMove);
                 } else if (moveResult.opponentWins()) {
-                    currentScoredMove = determineWhichOpposingPlayerWins(currentPlayer, topLevelMove, chessBoard);
-//                } else if (currentPlayer.equals(player) && chessBoard.isKingInCheck(player)) {
+                    var score = currentPlayer.equals(player)
+                            ? losingScore
+                            : winningScore;
+                    currentScoredMove = new ScoredMove(score, topLevelMove);
+                } else if (currentPlayer.equals(player) && chessBoard.isKingInCheck(player)) {
                     // this is a bad move
-//                    currentScoredMove = new ScoredMove(losingScore, topLevelMove);
+                    currentScoredMove = new ScoredMove(losingScore, topLevelMove);
 //                } else if (currentPlayer.equals(opposingPlayer) && chessBoard.isKingInCheck(opposingPlayer)) {
 //                    currentScoredMove = new ScoredMove(winningScore, topLevelMove);
                 } else {
@@ -90,7 +92,6 @@ public class DecisionTreeBestMoveService implements BestMoveService {
                     };
                     currentScoredMove = findBestMove(chessBoard, currentDepth + 1, nextPlayer, topLevelMove, levelThreeMoves);
                 }
-                chessBoard.revertLastMove();
 
                 if (currentScoredMove.score > maxScoredMove.score) {
                     maxScoredMove = currentScoredMove;
@@ -104,14 +105,9 @@ public class DecisionTreeBestMoveService implements BestMoveService {
                     System.out.println("move = " + move + " minScoredMove= " + minScoredMove + " maxScoredMove= " + maxScoredMove + " hashcode = " + chessBoard.hashCode());
                 }
 
-                if (currentDepth == 1) {
-                    levelThreeMoves.put(move, new ArrayList<>());
-                }
-
+                chessBoard.revertLastMove();
                 long computationalLimits = 200000;
-                if ((currentScoredMove.score <= losingThreshHold && currentPlayer.equals(opposingPlayer)) ||
-                        (currentScoredMove.score >= winningThreshHold && currentPlayer.equals(player)) ||
-                        heuristics.get(maxDepth) >= computationalLimits) {
+                if (heuristics.get(maxDepth) >= computationalLimits) {
                     break;
                 }
             }
@@ -137,19 +133,6 @@ public class DecisionTreeBestMoveService implements BestMoveService {
         });
     }
 
-    private ScoredMove determineWhichOpposingPlayerWins(Player currentPlayer, Move topLevelMove, ChessBoard targetBoard) {
-        var score = currentPlayer.equals(player)
-                ? losingScore
-                : winningScore;
-        return new ScoredMove(score, topLevelMove);
-    }
-
-    private ScoredMove determineWhichCurrentPlayerWins(Player currentPlayer, Move topLevelMove, ChessBoard targetBoard) {
-        var score = currentPlayer.equals(player)
-                ? winningScore
-                : losingScore;
-        return new ScoredMove(score, topLevelMove);
-    }
 
     private ScoredMove maxDepthReached(ChessBoard chessBoard, Move originalMove) {
         if (originalMove == null) {

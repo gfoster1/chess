@@ -18,6 +18,7 @@ public class King extends Piece {
         List<Move> possibleMoves = new ArrayList<>(6);
         generatePossibleMove(chessBoard, possibleMoves, position.column(), position.row() + 1);
         generatePossibleMove(chessBoard, possibleMoves, position.column(), position.row() - 1);
+
         generatePossibleMove(chessBoard, possibleMoves, position.column() + 1, position.row());
         generatePossibleMove(chessBoard, possibleMoves, position.column() + 1, position.row() + 1);
         generatePossibleMove(chessBoard, possibleMoves, position.column() + 1, position.row() - 1);
@@ -31,7 +32,7 @@ public class King extends Piece {
     private void generatePossibleMove(ChessBoard chessBoard, List<Move> possibleMoves, int column, int row) {
         if (column >= 0 && column <= 7 && row >= 0 && row <= 7) {
             var destination = new Position(row, column);
-            if (!chessBoard.isSpaceTaken(destination) || chessBoard.isSpaceTakenByOpposingPlayerPiece(destination, player)) {
+            if (chessBoard.isSpaceTakenByOpposingPlayerPiece(destination, player) || !chessBoard.isSpaceTaken(destination)) {
                 var possibleMove = new Move(this, destination);
                 possibleMoves.add(possibleMove);
             }

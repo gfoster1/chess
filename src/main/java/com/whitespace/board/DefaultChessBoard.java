@@ -261,10 +261,10 @@ public class DefaultChessBoard implements ChessBoard {
 
     public boolean isSpaceTakenByOpposingPlayerPiece(Position position, Player player) {
         return activePieces.stream()
+                .limit(1)
                 .filter(piece -> !piece.getPlayer().equals(player))
                 .filter(piece -> piece.getPosition().row() == position.row() &&
                         piece.getPosition().column() == position.column())
-                .limit(1)
                 .count() >= 1;
     }
 
@@ -339,10 +339,10 @@ public class DefaultChessBoard implements ChessBoard {
         defaultChessBoard.capturedPieces.clear();
         this.activePieces.forEach(piece -> {
             try {
-                Constructor<? extends Piece> constructor = CLASS_CACHE.compute(piece.getClass(), (aClass, constructor1) -> {
+                Constructor<? extends Piece> constructor = CLASS_CACHE.compute(piece.getClass(), (clazz, constructor1) -> {
                     if (constructor1 == null) {
                         try {
-                            return aClass.getConstructor(Player.class, Position.class);
+                            return clazz.getConstructor(Player.class, Position.class);
                         } catch (NoSuchMethodException e) {
                             e.printStackTrace();
                         }
@@ -360,10 +360,10 @@ public class DefaultChessBoard implements ChessBoard {
 
         this.capturedPieces.forEach(piece -> {
             try {
-                Constructor<? extends Piece> constructor = CLASS_CACHE.compute(piece.getClass(), (aClass, constructor1) -> {
+                Constructor<? extends Piece> constructor = CLASS_CACHE.compute(piece.getClass(), (clazz, constructor1) -> {
                     if (constructor1 == null) {
                         try {
-                            return aClass.getConstructor(Player.class, Position.class);
+                            return clazz.getConstructor(Player.class, Position.class);
                         } catch (NoSuchMethodException e) {
                             e.printStackTrace();
                         }
