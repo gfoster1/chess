@@ -84,10 +84,10 @@ public class StatefullMoveScorer {
         }
 
         var opennessModifier = 1.0;
-        int size = moves.size();
-        if (size >= 5) {
-            opennessModifier = 1.02;
-        }
+//        int size = moves.size();
+//        if (size >= 5) {
+//            opennessModifier = 1.02;
+//        }
 
         var positionalStrength = computeColumnPositionalStrengthScore(king.getPosition());
         var baseKingScore = 200 * opennessModifier + positionalStrength;
@@ -194,7 +194,7 @@ public class StatefullMoveScorer {
         }
 
         if (opponentsRooks.size() == 2) {
-            
+
         }
 
         // is king in check and can't move

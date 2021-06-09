@@ -42,28 +42,55 @@ public abstract class Piece {
         for (int i = 0; i < size; i++) {
             var row = position.row() - i;
             var column = position.column();
-            doStuff(builder, leftAvailable, row, column, board, this);
+            generateMoves(builder, leftAvailable, row, column, board, this);
 
             row = position.row() + i;
             column = position.column();
-            doStuff(builder, rightAvailable, row, column, board, this);
+            generateMoves(builder, rightAvailable, row, column, board, this);
 
             row = position.row();
             column = position.column() - i;
-            doStuff(builder, downAvailable, row, column, board, this);
+            generateMoves(builder, downAvailable, row, column, board, this);
 
             row = position.row();
             column = position.column() + i;
-            doStuff(builder, upAvailable, row, column, board, this);
+            generateMoves(builder, upAvailable, row, column, board, this);
         }
         return builder;
     }
 
-    private void doStuff(Stream.Builder<Move> builder,
-                         AtomicBoolean availableDirection,
-                         int row, int column,
-                         ChessBoard board,
-                         Piece piece) {
+    protected Stream.Builder<Move> generateValidDiagonalMoves(Stream.Builder<Move> builder,
+                                                              ChessBoard board,
+                                                              int size) {
+        var upAvailable = new AtomicBoolean(true);
+        var downAvailable = new AtomicBoolean(true);
+        var rightAvailable = new AtomicBoolean(true);
+        var leftAvailable = new AtomicBoolean(true);
+        for (int i = 0; i < size; i++) {
+            var row = position.row() - i;
+            var column = position.column() - i;
+            generateMoves(builder, leftAvailable, row, column, board, this);
+
+            row = position.row() + i;
+            column = position.column() + i;
+            generateMoves(builder, rightAvailable, row, column, board, this);
+
+            row = position.row() + i;
+            column = position.column() - i;
+            generateMoves(builder, downAvailable, row, column, board, this);
+
+            row = position.row() - i;
+            column = position.column() + i;
+            generateMoves(builder, upAvailable, row, column, board, this);
+        }
+        return builder;
+    }
+
+    private void generateMoves(Stream.Builder<Move> builder,
+                               AtomicBoolean availableDirection,
+                               int row, int column,
+                               ChessBoard board,
+                               Piece piece) {
         if (row == position.row() && column == position.column()) {
             return;
         }
@@ -83,32 +110,5 @@ public abstract class Piece {
                     }
                 },
                 () -> availableDirection.set(false));
-    }
-
-    protected Stream.Builder<Move> generateValidDiagonalMoves(Stream.Builder<Move> builder,
-                                                              ChessBoard board,
-                                                              int size) {
-        var upAvailable = new AtomicBoolean(true);
-        var downAvailable = new AtomicBoolean(true);
-        var rightAvailable = new AtomicBoolean(true);
-        var leftAvailable = new AtomicBoolean(true);
-        for (int i = 0; i < size; i++) {
-            var row = position.row() - i;
-            var column = position.column() - i;
-            doStuff(builder, leftAvailable, row, column, board, this);
-
-            row = position.row() + i;
-            column = position.column() + i;
-            doStuff(builder, rightAvailable, row, column, board, this);
-
-            row = position.row() + i;
-            column = position.column() - i;
-            doStuff(builder, downAvailable, row, column, board, this);
-
-            row = position.row() - i;
-            column = position.column() + i;
-            doStuff(builder, upAvailable, row, column, board, this);
-        }
-        return builder;
     }
 }

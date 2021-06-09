@@ -19,9 +19,12 @@ public class King extends Piece {
         generatePossibleMove(chessBoard, possibleMoves, position.column(), position.row() + 1);
         generatePossibleMove(chessBoard, possibleMoves, position.column(), position.row() - 1);
         generatePossibleMove(chessBoard, possibleMoves, position.column() + 1, position.row());
-        generatePossibleMove(chessBoard, possibleMoves, position.column() - 1, position.row());
         generatePossibleMove(chessBoard, possibleMoves, position.column() + 1, position.row() + 1);
+        generatePossibleMove(chessBoard, possibleMoves, position.column() + 1, position.row() - 1);
+
+        generatePossibleMove(chessBoard, possibleMoves, position.column() - 1, position.row());
         generatePossibleMove(chessBoard, possibleMoves, position.column() - 1, position.row() - 1);
+        generatePossibleMove(chessBoard, possibleMoves, position.column() - 1, position.row() + 1);
         return possibleMoves;
     }
 

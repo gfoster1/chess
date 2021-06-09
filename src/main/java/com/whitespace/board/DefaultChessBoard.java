@@ -4,9 +4,8 @@ import com.whitespace.BestMoveService;
 import com.whitespace.ChessBoard;
 import com.whitespace.Player;
 import com.whitespace.board.piece.*;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
@@ -15,50 +14,79 @@ import java.util.stream.Stream;
 public class DefaultChessBoard implements ChessBoard {
     public static final int MAX_BOARD_SIZE = 8;
 
+    private static final Map<Class, Constructor> CLASS_CACHE = new HashMap<>();
+
+    private final Stack<MoveResult> moveHistory = new Stack<>();
+    private final List<Piece> activePieces = new ArrayList<>(32);
+    private final List<Piece> capturedPieces = new ArrayList<>(32);
+
     private final BestMoveService blackBoardScoringService;
     private final BestMoveService whiteBoardScoringService;
-    private final Stack<MoveResult> moveHistory = new Stack<>();
-
-    private final Piece[][] pieces = new Piece[MAX_BOARD_SIZE][MAX_BOARD_SIZE];
-    private final Position[][] positions = new Position[MAX_BOARD_SIZE][MAX_BOARD_SIZE];
-    private final List<Piece> pieceList = new ArrayList<>(32);
 
     public DefaultChessBoard(BestMoveService blackBoardScoringService, BestMoveService whiteBoardScoringService) {
         this.blackBoardScoringService = blackBoardScoringService;
         this.whiteBoardScoringService = whiteBoardScoringService;
-        initializePosition();
         initializeWhitePieces();
         initializeBlackPieces();
     }
 
-    public DefaultChessBoard(Piece[][] pieces, BestMoveService blackBoardScoringService, BestMoveService whiteBoardScoringService) {
-        this.blackBoardScoringService = blackBoardScoringService;
-        this.whiteBoardScoringService = whiteBoardScoringService;
-        initializePosition();
-        for (int i = 0; i < MAX_BOARD_SIZE; i++) {
-            for (int j = 0; j < MAX_BOARD_SIZE; j++) {
-                this.pieces[i][j] = pieces[i][j];
-                Piece piece = pieces[i][j];
-                if (piece != null) {
-                    pieceList.add(piece);
-                }
-            }
+    private void initializeBlackPieces() {
+        for (int i = 0; i < 8; i++) {
+            var position = new Position(6, i);
+            var pawn = new Pawn(Player.black, position);
+            activePieces.add(pawn);
         }
+
+        Rook rook1 = new Rook(Player.black, new Position(7, 0));
+        Knight knight1 = new Knight(Player.black, new Position(7, 1));
+        Bishop bishop1 = new Bishop(Player.black, new Position(7, 2));
+        Queen queen = new Queen(Player.black, new Position(7, 3));
+        King king = new King(Player.black, new Position(7, 4));
+        Bishop bishop2 = new Bishop(Player.black, new Position(7, 5));
+        Knight knight2 = new Knight(Player.black, new Position(7, 6));
+        Rook rook2 = new Rook(Player.black, new Position(7, 7));
+
+        activePieces.add(rook1);
+        activePieces.add(bishop1);
+        activePieces.add(knight1);
+        activePieces.add(queen);
+        activePieces.add(king);
+        activePieces.add(knight2);
+        activePieces.add(bishop2);
+        activePieces.add(rook2);
     }
 
-    private void initializePosition() {
-        for (int i = 0; i < MAX_BOARD_SIZE; i++) {
-            for (int j = 0; j < MAX_BOARD_SIZE; j++) {
-                positions[i][j] = new Position(i, j);
-            }
+    private void initializeWhitePieces() {
+        for (int i = 0; i < 8; i++) {
+            var position = new Position(1, i);
+            var pawn = new Pawn(Player.white, position);
+            activePieces.add(pawn);
         }
+
+        Rook rook1 = new Rook(Player.white, new Position(0, 0));
+        Knight knight1 = new Knight(Player.white, new Position(0, 1));
+        Bishop bishop1 = new Bishop(Player.white, new Position(0, 2));
+        Queen queen = new Queen(Player.white, new Position(0, 3));
+        King king = new King(Player.white, new Position(0, 4));
+        Bishop bishop2 = new Bishop(Player.white, new Position(0, 5));
+        Knight knight2 = new Knight(Player.white, new Position(0, 6));
+        Rook rook2 = new Rook(Player.white, new Position(0, 7));
+
+        activePieces.add(rook1);
+        activePieces.add(bishop1);
+        activePieces.add(knight1);
+        activePieces.add(queen);
+        activePieces.add(king);
+        activePieces.add(knight2);
+        activePieces.add(bishop2);
+        activePieces.add(rook2);
     }
 
     public void play() {
         final AtomicBoolean isPlaying = new AtomicBoolean(true);
         while (isPlaying.get()) {
             System.out.println("White's move - begin");
-            var whitesMove = whiteBoardScoringService.findBestMove(new DefaultChessBoard(this.pieces, blackBoardScoringService, whiteBoardScoringService));
+            var whitesMove = whiteBoardScoringService.findBestMove(this);
             whitesMove.ifPresentOrElse(move -> {
                 MoveResult moveResult = applyMove(move, true);
 
@@ -76,7 +104,7 @@ public class DefaultChessBoard implements ChessBoard {
 
             if (isPlaying.get()) {
                 System.out.println("Black's move - begin");
-                var blacksMove = blackBoardScoringService.findBestMove(new DefaultChessBoard(this.pieces, blackBoardScoringService, whiteBoardScoringService));
+                var blacksMove = blackBoardScoringService.findBestMove(this);
                 blacksMove.ifPresentOrElse(move -> {
                     MoveResult moveResult = applyMove(move, true);
 
@@ -106,25 +134,30 @@ public class DefaultChessBoard implements ChessBoard {
             case white -> Player.black;
             case black -> Player.white;
         };
-        moveResult.capturedPiece().ifPresent(piece -> {
-            System.out.println(String.format("%s %s was captured", opposingPlayer, piece.getClass().getSimpleName()));
-        });
+        moveResult.capturedPiece().ifPresent(piece -> System.out.printf("%s %s was captured%n", opposingPlayer, piece.getClass().getSimpleName()));
 
         if (moveResult.opponentWins()) {
-            System.out.println(String.format("%s beat %s with a resounding victory", opposingPlayer, currentPlayer));
+            System.out.printf("%s beat %s with a resounding victory%n", opposingPlayer, currentPlayer);
         }
 
         if (moveResult.currentPlayerWins()) {
-            System.out.println(String.format("%s beat %s with a resounding victory", currentPlayer, opposingPlayer));
+            System.out.printf("%s beat %s with a resounding victory%n", currentPlayer, opposingPlayer);
         }
     }
 
     private void printBoard() {
+        Piece[][] pieces = new Piece[MAX_BOARD_SIZE][MAX_BOARD_SIZE];
+        activePieces.parallelStream()
+                .forEach(piece -> {
+                    var position = piece.getPosition();
+                    pieces[position.row()][position.column()] = piece;
+                });
+
         for (int i = 0; i < MAX_BOARD_SIZE; i++) {
             if (i == 0) {
                 System.out.print("         ");
                 for (int j = 0; j < MAX_BOARD_SIZE; j++) {
-                    System.out.print(String.format("%10s", "Col: " + j));
+                    System.out.printf("%10s", "Col: " + j);
                 }
                 System.out.println();
             }
@@ -150,16 +183,11 @@ public class DefaultChessBoard implements ChessBoard {
         var lastMove = moveHistory.pop();
         var origin = lastMove.origin();
         lastMove.piece().setPosition(origin);
-        pieces[origin.row()][origin.column()] = lastMove.piece();
         lastMove.capturedPiece()
-                .ifPresentOrElse(capturedPiece -> {
-                    var destination = lastMove.destination();
-                    capturedPiece.setPosition(destination);
-                    pieces[destination.row()][destination.column()] = capturedPiece;
-                    pieceList.add(capturedPiece);
-                }, () -> {
-                    var destination = lastMove.destination();
-                    pieces[destination.row()][destination.column()] = null;
+                .ifPresent(capturedPiece -> {
+                    capturedPieces.remove(capturedPiece);
+                    activePieces.add(capturedPiece);
+                    capturedPiece.setPosition(lastMove.destination());
                 });
     }
 
@@ -175,36 +203,35 @@ public class DefaultChessBoard implements ChessBoard {
 
         var opponentWins = false;
         var player = pieceToBeMoved.getPlayer();
+        var opposingPlayer = switch (player) {
+            case white -> Player.black;
+            case black -> Player.white;
+        };
 
         // taking a piece
-        var capturedPiece = pieces[destination.row()][destination.column()];
-        Optional<Piece> possiblyCapturedPiece = Optional.ofNullable(capturedPiece);
-        if (capturedPiece != null) {
-            if (capturedPiece.getPlayer().equals(player)) {
-                if (debug) {
-                    // invalid move that likely won't occur
-                    System.out.println("invalid move!");
-                }
-                opponentWins = true;
-            } else {
-                pieceList.remove(capturedPiece);
-            }
+        Optional<Piece> possiblyCapturedPiece = activePieces.stream()
+                .filter(piece -> piece.getPlayer().equals(opposingPlayer))
+                .filter(piece -> piece.getPosition().column() == destination.column() &&
+                        piece.getPosition().row() == destination.row())
+                .findAny();
 
-            if (capturedPiece instanceof King) {
+        possiblyCapturedPiece.ifPresent(piece -> {
+            if (piece instanceof King) {
                 currentPlayerWins.set(true);
             }
-        }
+
+            activePieces.remove(piece);
+            capturedPieces.add(piece);
+        });
 
         pieceToBeMoved.setPosition(destination);
-        pieces[destination.row()][destination.column()] = pieceToBeMoved;
-        pieces[origin.row()][origin.column()] = null;
 
         // pawn to queen
         if (pieceToBeMoved instanceof Pawn) {
             if (isPawnReadyToBeQueened(player, destination)) {
+                activePieces.remove(pieceToBeMoved);
                 var queen = new Queen(player, destination);
-                pieces[destination.row()][destination.column()] = queen;
-                pieces[origin.row()][origin.column()] = null;
+                activePieces.add(queen);
             }
 
             if (isPawnDoingEnpassant(player, destination)) {
@@ -221,72 +248,38 @@ public class DefaultChessBoard implements ChessBoard {
 
     public Optional<Position> getPosition(int row, int column) {
         return (row >= 0 && row < MAX_BOARD_SIZE && column >= 0 && column < MAX_BOARD_SIZE) ?
-                Optional.of(positions[row][column]) :
+                Optional.of(new Position(row, column)) :
                 Optional.empty();
     }
 
     public boolean isSpaceTaken(Position position) {
-        return pieces[position.row()][position.column()] != null;
+        return activePieces.stream()
+                .filter(piece -> piece.getPosition().row() == position.row() && piece.getPosition().column() == position.column())
+                .limit(1)
+                .count() >= 1;
     }
 
-    public boolean isSpaceTakenByOpposingPlayerPiece(Position destination, Player player) {
-        var piece = pieces[destination.row()][destination.column()];
-        if (piece == null) {
-            return false;
-        }
-        return !piece.getPlayer().equals(player);
+    public boolean isSpaceTakenByOpposingPlayerPiece(Position position, Player player) {
+        return activePieces.stream()
+                .filter(piece -> !piece.getPlayer().equals(player))
+                .filter(piece -> piece.getPosition().row() == position.row() &&
+                        piece.getPosition().column() == position.column())
+                .limit(1)
+                .count() >= 1;
     }
 
-    public boolean isSpaceTakenByMyPiece(Position destination, Player player) {
-        var p = pieces[destination.row()][destination.column()];
-        if (p == null) {
-            return false;
-        }
-        return p.getPlayer().equals(player);
+    public boolean isSpaceTakenByMyPiece(Position position, Player player) {
+        return activePieces.stream()
+                .filter(piece -> piece.getPlayer().equals(player))
+                .filter(piece -> piece.getPosition().row() == position.row() &&
+                        piece.getPosition().column() == position.column())
+                .limit(1)
+                .count() >= 1;
     }
 
     private boolean isInvalidMove(Move move) {
         return false;
 //        return isKingMovingIntoCheck(move) || isKingInCheckAndDidNotMove(move);
-    }
-
-    private boolean isKingMovingIntoCheck(Move move) {
-        var currentPieceToMove = move.piece();
-        var kingMovingIntoCheck = false;
-
-        if (currentPieceToMove instanceof King king) {
-            applyMove(move, false);
-            ChessBoard chessBoard = this;
-            kingMovingIntoCheck = pieceList.parallelStream()
-                    .filter(piece -> !piece.getPlayer().equals(piece.getPlayer()))
-                    .flatMap((Function<Piece, Stream<Move>>) opponentsPiece -> opponentsPiece.possibleMoves(chessBoard).parallelStream())
-                    .filter(opponentMove -> opponentMove.destination().equals(move.destination()))
-                    .count() >= 1;
-            revertLastMove();
-        }
-        return kingMovingIntoCheck;
-    }
-
-    private boolean isKingInCheckAndDidNotMove(Move move) {
-        var currentPlayer = move.piece().getPlayer();
-        var optional = pieceList.parallelStream()
-                .filter(piece -> (piece instanceof King) && piece.getPlayer().equals(currentPlayer))
-                .map(piece -> piece.getPosition())
-                .findFirst();
-        var currentPlayerKing = optional.isPresent() ? optional.get() : null;
-
-        if (currentPlayerKing == null) {
-            return false;
-        }
-
-        ChessBoard chessBoard = this;
-        var kingIsInCheck = pieceList.parallelStream()
-                .filter(piece -> !piece.getPlayer().equals(piece.getPlayer()))
-                .flatMap((Function<Piece, Stream<Move>>) piece -> piece.possibleMoves(chessBoard).parallelStream())
-                .filter(opponentMove -> opponentMove.destination().equals(currentPlayerKing))
-                .count() >= 1;
-
-        return kingIsInCheck && !(move.piece() instanceof King);
     }
 
     private boolean isPawnDoingEnpassant(Player player, Position destination) {
@@ -300,115 +293,131 @@ public class DefaultChessBoard implements ChessBoard {
                 (player.equals(Player.black) && destination.row() == blackBackRow);
     }
 
-    private void initializeBlackPieces() {
-        for (int i = 0; i < 8; i++) {
-            var pawn = new Pawn(Player.black, positions[6][i]);
-            pieces[6][i] = pawn;
-            pieceList.add(pawn);
-        }
-
-        Rook rook1 = new Rook(Player.black, positions[7][0]);
-        Knight knight1 = new Knight(Player.black, positions[7][1]);
-        Bishop bishop1 = new Bishop(Player.black, positions[7][2]);
-        Queen queen = new Queen(Player.black, positions[7][3]);
-        King king = new King(Player.black, positions[7][4]);
-        Bishop bishop2 = new Bishop(Player.black, positions[7][5]);
-        Knight knight2 = new Knight(Player.black, positions[7][6]);
-        Rook rook2 = new Rook(Player.black, positions[7][7]);
-
-        pieces[7][0] = rook1;
-        pieces[7][1] = knight1;
-        pieces[7][2] = bishop1;
-        pieces[7][3] = queen;
-        pieces[7][4] = king;
-        pieces[7][5] = bishop2;
-        pieces[7][6] = knight2;
-        pieces[7][7] = rook2;
-
-        pieceList.add(rook1);
-        pieceList.add(bishop1);
-        pieceList.add(knight1);
-        pieceList.add(queen);
-        pieceList.add(king);
-        pieceList.add(knight2);
-        pieceList.add(bishop2);
-        pieceList.add(rook2);
-    }
-
-    private void initializeWhitePieces() {
-        for (int i = 0; i < 8; i++) {
-            var pawn = new Pawn(Player.white, positions[1][i]);
-            pieces[1][i] = pawn;
-            pieceList.add(pawn);
-        }
-
-        Rook rook1 = new Rook(Player.white, positions[0][0]);
-        Knight knight1 = new Knight(Player.white, positions[0][1]);
-        Bishop bishop1 = new Bishop(Player.white, positions[0][2]);
-        Queen queen = new Queen(Player.white, positions[0][3]);
-        King king = new King(Player.white, positions[0][4]);
-        Bishop bishop2 = new Bishop(Player.white, positions[0][5]);
-        Knight knight2 = new Knight(Player.white, positions[0][6]);
-        Rook rook2 = new Rook(Player.white, positions[0][7]);
-
-        pieces[0][0] = rook1;
-        pieces[0][1] = knight1;
-        pieces[0][2] = bishop1;
-        pieces[0][3] = queen;
-        pieces[0][4] = king;
-        pieces[0][5] = bishop2;
-        pieces[0][6] = knight2;
-        pieces[0][7] = rook2;
-
-        pieceList.add(rook1);
-        pieceList.add(bishop1);
-        pieceList.add(knight1);
-        pieceList.add(queen);
-        pieceList.add(king);
-        pieceList.add(knight2);
-        pieceList.add(bishop2);
-        pieceList.add(rook2);
-    }
-
     public List<Piece> getPieces() {
-        return pieceList;
+        return activePieces;
     }
 
     @Override
     public Stream<Move> getPossibleMoves(Player player) {
-        return pieceList.parallelStream()
+        return activePieces.parallelStream()
                 .filter(piece -> piece.getPlayer().equals(player))
                 .flatMap((Function<Piece, Stream<Move>>) piece -> piece.possibleMoves(this).parallelStream());
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
+    public boolean isKingInCheck(Player player) {
+        Optional<Position> playersKing = activePieces.stream().parallel()
+                .filter(piece -> piece.getPlayer().equals(player))
+                .filter(piece -> piece instanceof King).map(king -> king.getPosition())
+                .findFirst();
 
-        if (!(o instanceof DefaultChessBoard)) return false;
-
-        DefaultChessBoard that = (DefaultChessBoard) o;
-
-        EqualsBuilder equalsBuilder = new EqualsBuilder();
-        equalsBuilder.append(pieceList, that.pieceList);
-        return equalsBuilder.isEquals();
+        boolean isKingInCheck = false;
+        if (playersKing.isPresent()) {
+            var opposingPlayer = switch (player) {
+                case white -> Player.black;
+                case black -> Player.white;
+            };
+            isKingInCheck = this.getPossibleMoves(opposingPlayer)
+                    .filter(move -> {
+                        var destination = move.destination();
+                        var playersKingPosition = playersKing.get();
+                        return destination.row() == playersKingPosition.row() && destination.column() == playersKingPosition.column();
+                    })
+                    .limit(1)
+                    .count() >= 1;
+        } else {
+            System.out.println("No king is present so returning false for now.");
+            // TODO big potential bug here
+        }
+        return isKingInCheck;
     }
 
     @Override
-    public int hashCode() {
-        HashCodeBuilder hashCodeBuilder = new HashCodeBuilder(17, 37);
-        Collections.sort(pieceList, Comparator.comparing(Piece::getPlayer));
-        for (int i = 0; i < pieceList.size(); i++) {
-            Piece piece = pieceList.get(i);
-            int row = piece.getPosition().row();
-            int column = piece.getPosition().column();
-            String player = piece.getPlayer().toString();
-            String simpleName = piece.getClass().getSimpleName();
-            hashCodeBuilder.append(row);
-            hashCodeBuilder.append(column);
-            hashCodeBuilder.append(player);
-            hashCodeBuilder.append(simpleName);
-        }
-        return hashCodeBuilder.toHashCode();
+    public ChessBoard copy() {
+        DefaultChessBoard defaultChessBoard = new DefaultChessBoard(blackBoardScoringService, whiteBoardScoringService);
+        defaultChessBoard.activePieces.clear();
+        defaultChessBoard.capturedPieces.clear();
+        this.activePieces.forEach(piece -> {
+            try {
+                Constructor<? extends Piece> constructor = CLASS_CACHE.compute(piece.getClass(), (aClass, constructor1) -> {
+                    if (constructor1 == null) {
+                        try {
+                            return aClass.getConstructor(Player.class, Position.class);
+                        } catch (NoSuchMethodException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    return constructor1;
+                });
+                Position position = new Position(piece.getPosition().row(), piece.getPosition().column());
+                Player player = piece.getPlayer();
+                Piece newPiece = constructor.newInstance(player, position);
+                defaultChessBoard.activePieces.add(newPiece);
+            } catch (Exception e) {
+                System.err.println(e);
+            }
+        });
+
+        this.capturedPieces.forEach(piece -> {
+            try {
+                Constructor<? extends Piece> constructor = CLASS_CACHE.compute(piece.getClass(), (aClass, constructor1) -> {
+                    if (constructor1 == null) {
+                        try {
+                            return aClass.getConstructor(Player.class, Position.class);
+                        } catch (NoSuchMethodException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    return constructor1;
+                });
+                Position position = new Position(piece.getPosition().row(), piece.getPosition().column());
+                Player player = piece.getPlayer();
+                Piece newPiece = constructor.newInstance(player, position);
+                defaultChessBoard.capturedPieces.add(newPiece);
+            } catch (Exception e) {
+                System.err.println(e);
+            }
+        });
+        return defaultChessBoard;
     }
+
+    private boolean isKingMovingIntoCheck(Move move) {
+        var currentPieceToMove = move.piece();
+        var kingMovingIntoCheck = false;
+
+        if (currentPieceToMove instanceof King king) {
+            applyMove(move, false);
+            ChessBoard chessBoard = this;
+            kingMovingIntoCheck = activePieces.parallelStream()
+                    .filter(piece -> !piece.getPlayer().equals(piece.getPlayer()))
+                    .flatMap((Function<Piece, Stream<Move>>) opponentsPiece -> opponentsPiece.possibleMoves(chessBoard).parallelStream())
+                    .filter(opponentMove -> opponentMove.destination().equals(move.destination()))
+                    .count() >= 1;
+            revertLastMove();
+        }
+        return kingMovingIntoCheck;
+    }
+
+    private boolean isKingInCheckAndDidNotMove(Move move) {
+        var currentPlayer = move.piece().getPlayer();
+        var optional = activePieces.parallelStream()
+                .filter(piece -> (piece instanceof King) && piece.getPlayer().equals(currentPlayer))
+                .map(piece -> piece.getPosition())
+                .findFirst();
+        var currentPlayerKing = optional.isPresent() ? optional.get() : null;
+
+        if (currentPlayerKing == null) {
+            return false;
+        }
+
+        ChessBoard chessBoard = this;
+        var kingIsInCheck = activePieces.parallelStream()
+                .filter(piece -> !piece.getPlayer().equals(piece.getPlayer()))
+                .flatMap((Function<Piece, Stream<Move>>) piece -> piece.possibleMoves(chessBoard).parallelStream())
+                .filter(opponentMove -> opponentMove.destination().equals(currentPlayerKing))
+                .count() >= 1;
+
+        return kingIsInCheck && !(move.piece() instanceof King);
+    }
+
 }

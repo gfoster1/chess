@@ -27,4 +27,8 @@ public interface ChessBoard {
     Collection<Piece> getPieces();
 
     Stream<Move> getPossibleMoves(Player player);
+
+    boolean isKingInCheck(Player player);
+
+    ChessBoard copy();
 }

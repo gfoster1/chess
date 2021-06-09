@@ -11,12 +11,12 @@ public class ChessApplication {
     public static void main(String[] args) {
         var blackBoardService = new DefaultBestMoveService(Player.black, 1, new DefaultBoardScoringService(Player.black, 3));
 
-        BestMoveService whiteBoardService;
+        var maxDepth = 3;
+        var useCaching = false;
         var fastScoringService = new FastBoardScoringService(Player.white, 0);
-        boolean useCaching = false;
-        int maxDepth = 3;
+        var cachingBoardScoringService = new CachingBoardScoringService(fastScoringService);
+        BestMoveService whiteBoardService;
         if (useCaching) {
-            var cachingBoardScoringService = new CachingBoardScoringService(fastScoringService);
             whiteBoardService = new DecisionTreeBestMoveService(Player.white, maxDepth, cachingBoardScoringService);
         } else {
             whiteBoardService = new DecisionTreeBestMoveService(Player.white, maxDepth, fastScoringService);
@@ -24,6 +24,10 @@ public class ChessApplication {
 //        var board = new DefaultChessBoard(blackBoardService, whiteBoardService);
 
         new DefaultChessBoard(blackBoardService, whiteBoardService).play();
+
+        if (useCaching) {
+            cachingBoardScoringService.printStats();
+        }
 //        new DefaultChessBoard(blackBoardService, whiteBoardService).play();
         if (useCaching) {
 //        whiteScoringService.writeToDisk();
