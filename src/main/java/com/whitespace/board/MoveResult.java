@@ -1,6 +1,6 @@
-package com.whitespace.movement;
+package com.whitespace.board;
 
-import com.whitespace.piece.Piece;
+import com.whitespace.board.piece.Piece;
 
 import java.util.Optional;
 

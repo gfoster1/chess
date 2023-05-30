@@ -1,4 +1,4 @@
-package com.whitespace.movement;
+package com.whitespace.board;
 
 public record Position(int row, int column) {
 }
