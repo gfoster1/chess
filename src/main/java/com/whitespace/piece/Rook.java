@@ -17,7 +17,7 @@ public class Rook extends Piece {
         super(player, position);
     }
 
-    @Override
+//    @Override
     public int strength(Board board) {
         List<Piece> myPieces = switch (player) {
             case black -> board.getBlackPieces();

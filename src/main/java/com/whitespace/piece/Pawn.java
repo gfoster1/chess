@@ -37,16 +37,6 @@ public class Pawn extends Piece {
     }
 
     @Override
-    public int strength(Board board) {
-        int score = 1;
-        int positionalStrength = switch (player) {
-            case black -> blackValues.get(position.row());
-            case white -> whiteValues.get(position.row());
-        };
-        return score + positionalStrength;
-    }
-
-    @Override
     public List<Move> possibleMoves(Board board) {
         var piece = this;
         List<Move> moves = new ArrayList<>();

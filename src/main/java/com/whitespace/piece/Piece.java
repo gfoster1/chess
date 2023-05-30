@@ -30,8 +30,6 @@ public abstract class Piece {
         return position;
     }
 
-    public abstract int strength(Board board);
-
     public abstract List<Move> possibleMoves(Board board);
 
     protected Stream.Builder<Move> generateValidHorizontalMoves(Stream.Builder<Move> builder,

@@ -14,11 +14,6 @@ public class King extends Piece {
     }
 
     @Override
-    public int strength(Board board) {
-        return 200;
-    }
-
-    @Override
     public List<Move> possibleMoves(Board board) {
         var piece = this;
         List<Move> possibleMoves = new ArrayList<>();
