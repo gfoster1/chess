@@ -1,9 +1,10 @@
-package com.whitespace.piece;
+package com.whitespace.board.piece;
 
-import com.whitespace.Board;
+import com.whitespace.ChessBoard;
 import com.whitespace.Player;
-import com.whitespace.movement.Move;
-import com.whitespace.movement.Position;
+import com.whitespace.board.Board;
+import com.whitespace.board.Move;
+import com.whitespace.board.Position;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -30,10 +31,10 @@ public abstract class Piece {
         return position;
     }
 
-    public abstract List<Move> possibleMoves(Board board);
+    public abstract List<Move> possibleMoves(ChessBoard board);
 
     protected Stream.Builder<Move> generateValidHorizontalMoves(Stream.Builder<Move> builder,
-                                                                Board board) {
+                                                                ChessBoard board) {
         var upAvailable = new AtomicBoolean(true);
         var downAvailable = new AtomicBoolean(true);
         var rightAvailable = new AtomicBoolean(true);
@@ -62,31 +63,31 @@ public abstract class Piece {
     private void doStuff(Stream.Builder<Move> builder,
                          AtomicBoolean availableDirection,
                          int row, int column,
-                         Board board,
+                         ChessBoard board,
                          Piece piece) {
         if (row == position.row() && column == position.column()) {
             return;
         }
 
-        board.getPosition(row, column).ifPresentOrElse(
-                destination -> {
-                    if (availableDirection.get()) {
-                        if (board.isSpaceTakenByMyPiece(destination, player)) {
-                            availableDirection.set(false);
-                            return;
-                        }
-
-                        if (board.isSpaceTakenByOpposingPlayerPiece(destination, player)) {
-                            availableDirection.set(false);
-                        }
-                        builder.add(new Move(piece, destination));
-                    }
-                },
-                () -> availableDirection.set(false));
+//        board.getPosition(row, column).ifPresentOrElse(
+//                destination -> {
+//                    if (availableDirection.get()) {
+//                        if (board.isSpaceTakenByMyPiece(destination, player)) {
+//                            availableDirection.set(false);
+//                            return;
+//                        }
+//
+//                        if (board.isSpaceTakenByOpposingPlayerPiece(destination, player)) {
+//                            availableDirection.set(false);
+//                        }
+//                        builder.add(new Move(piece, destination));
+//                    }
+//                },
+//                () -> availableDirection.set(false));
     }
 
     protected Stream.Builder<Move> generateValidDiagonalMoves(Stream.Builder<Move> builder,
-                                                              Board board) {
+                                                              ChessBoard board) {
         var upAvailable = new AtomicBoolean(true);
         var downAvailable = new AtomicBoolean(true);
         var rightAvailable = new AtomicBoolean(true);

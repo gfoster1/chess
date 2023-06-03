@@ -1,14 +1,15 @@
 package com.whitespace.scoring;
 
-import com.whitespace.Board;
 import com.whitespace.BoardScoringService;
 import com.whitespace.Player;
-import com.whitespace.piece.*;
+import com.whitespace.board.Board;
+import com.whitespace.board.piece.*;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiFunction;
 
 public class DefaultBoardScoringService implements BoardScoringService {
     private final Map<Class<?>, Integer> rankRubrik = new HashMap<>();
@@ -51,20 +52,35 @@ public class DefaultBoardScoringService implements BoardScoringService {
 
     private int scoreMyPieces(List<Piece> myPieces) {
         var capturedMyKing = new AtomicBoolean(true);
+        var numberOfSeenPieces = new HashMap<Class<?>, Integer>();
         var score = myPieces.stream()
                 .peek(piece -> {
                     if (piece instanceof King) {
                         capturedMyKing.set(false);
                     }
+
+
                 })
                 .map(piece -> {
                     var baseStrength = rankRubrik.get(piece.getClass());
-                    var positionalModifier = 1;
-                    var position = piece.getPosition();
-                    if (position.row() == 3 || position.row() == 4) {
-                        positionalModifier = 2;
-                    }
-                    return baseStrength * positionalModifier;
+
+                    int row = piece.getPosition().row();
+                    var positionalModifier = (row == 3 || row == 4) ? 2 : 1;
+                    
+                    int knightModifier = 5;
+                    int bishopModifier = 6;
+                    int rookModifier = 7;
+                    int numericModifier =
+                    switch (piece) {
+                        case Knight knight ->
+                                numberOfSeenPieces.compute(knight.getClass(), (clazz, integer) -> integer == null ? 0 : knightModifier);
+                        case Bishop bishop ->
+                                numberOfSeenPieces.compute(bishop.getClass(), (clazz, integer) -> integer == null ? 0 : bishopModifier);
+                        case Rook rook ->
+                                numberOfSeenPieces.compute(rook.getClass(), (clazz, integer) -> integer == null ? 0 : rookModifier);
+                        default -> 0;
+                    };
+                    return (baseStrength * positionalModifier) + numericModifier;
                 })
                 .reduce(0, Integer::sum);
 

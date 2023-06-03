@@ -1,6 +1,7 @@
 package com.whitespace;
 
-import com.whitespace.piece.Piece;
+import com.whitespace.board.Board;
+import com.whitespace.board.piece.Piece;
 
 import java.util.List;
 
@@ -11,5 +12,5 @@ public interface BoardScoringService {
      */
     int scoreBoard(Board board, Player plLayer);
 
-    int scorePieces(List<Piece> myPieces,    List<Piece> opponentsPieces);
+    int scorePieces(List<Piece> myPieces, List<Piece> opponentsPieces);
 }

@@ -1,20 +1,14 @@
 package com.whitespace.scoring;
 
-import com.whitespace.Board;
 import com.whitespace.BoardScoringService;
-import com.whitespace.BoardService;
 import com.whitespace.Player;
-import com.whitespace.movement.Move;
-import com.whitespace.piece.King;
-import com.whitespace.piece.Piece;
+import com.whitespace.board.Board;
+import com.whitespace.board.Move;
+import com.whitespace.board.piece.Piece;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-public class DefaultBoardService implements BoardService {
+public class DefaultBoardService {
     private final Player player;
     private final BoardScoringService boardScoringService;
 
@@ -79,10 +73,11 @@ public class DefaultBoardService implements BoardService {
     }
 
     private Set<Move> getValidPossibleMoves(List<Piece> pieces, Board board) {
-        return pieces.stream()
-                .flatMap((Function<Piece, Stream<Move>>) piece -> piece.possibleMoves(board).stream())
-                .filter(move -> !board.isInvalidMove(move))
-                .collect(Collectors.toSet());
+        return Collections.emptySet();
+//        return pieces.stream()
+//                .flatMap((Function<Piece, Stream<Move>>) piece -> piece.possibleMoves(board).stream())
+//                .filter(move -> !board.isInvalidMove(move))
+//                .collect(Collectors.toSet());
     }
 
     private record ScoredMove(int score, Move move) {

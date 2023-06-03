@@ -5,6 +5,7 @@ import com.whitespace.Player;
 import com.whitespace.board.Move;
 import com.whitespace.board.Position;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -16,8 +17,9 @@ public class Bishop extends Piece {
 
     @Override
     public List<Move> possibleMoves(ChessBoard board) {
-        Stream.Builder<Move> builder = Stream.builder();
-        generateValidDiagonalMoves(builder, board, 8);
-        return builder.build().collect(Collectors.toList());
+        return Collections.emptyList();
+//        Stream.Builder<Move> builder = Stream.builder();
+//        generateValidDiagonalMoves(builder, board, 8);
+//        return builder.build().collect(Collectors.toList());
     }
 }

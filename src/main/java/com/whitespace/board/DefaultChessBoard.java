@@ -299,9 +299,10 @@ public class DefaultChessBoard implements ChessBoard {
 
     @Override
     public Stream<Move> getPossibleMoves(Player player) {
-        return activePieces.parallelStream()
-                .filter(piece -> piece.getPlayer().equals(player))
-                .flatMap((Function<Piece, Stream<Move>>) piece -> piece.possibleMoves(this).parallelStream());
+        return null;
+//        return activePieces.parallelStream()
+//                .filter(piece -> piece.getPlayer().equals(player))
+//                .flatMap((Function<Piece, Stream<Move>>) piece -> piece.possibleMoves(this).parallelStream());
     }
 
     @Override

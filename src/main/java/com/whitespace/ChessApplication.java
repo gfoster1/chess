@@ -1,5 +1,6 @@
 package com.whitespace;
 
+import com.whitespace.board.Board;
 import com.whitespace.scoring.DefaultBoardScoringService;
 import com.whitespace.scoring.DefaultBoardService;
 

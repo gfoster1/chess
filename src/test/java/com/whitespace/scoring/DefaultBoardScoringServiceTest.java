@@ -1,9 +1,8 @@
 package com.whitespace.scoring;
 
-import com.whitespace.Board;
 import com.whitespace.Player;
-import com.whitespace.movement.Position;
-import com.whitespace.piece.*;
+import com.whitespace.board.Position;
+import com.whitespace.board.piece.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -47,23 +46,42 @@ class DefaultBoardScoringServiceTest {
                 new King(Player.black, new Position(1, 0))
         );
         var score = boardScoringService.scorePieces(myPieces, opponentsPieces);
-        assertEquals(200, score);
+        assertEquals(100, score);
     }
 
     @Test
-    void testRubrik(){
+    void testRubrik() {
+        List<Piece> myPieces = Arrays.asList(
+                new King(Player.white, new Position(1, 0)),
+                new Queen(Player.white, new Position(1, 0)),
+                new Bishop(Player.white, new Position(1, 0)),
+                new Pawn(Player.white, new Position(1, 0)),
+                new Rook(Player.white, new Position(1, 0)),
+                new Knight(Player.white, new Position(1, 0))
+        );
+        List<Piece> opponentsPieces = Arrays.asList(
+                new King(Player.black, new Position(1, 0))
+        );
+        var score = boardScoringService.scorePieces(myPieces, opponentsPieces);
+        assertEquals(191, score);
+    }
+
+    @Test
+    void testMultiplePieces() {
         List<Piece> myPieces = Arrays.asList(
                 new King(Player.white, new Position(1, 0)),
                 new Bishop(Player.white, new Position(1, 0)),
-                new Pawn(Player.white, new Position(1, 0)),
                 new Bishop(Player.white, new Position(1, 0)),
                 new Knight(Player.white, new Position(1, 0)),
+                new Knight(Player.white, new Position(1, 0)),
+                new Rook(Player.white, new Position(1, 0)),
+                new Rook(Player.white, new Position(1, 0)),
                 new Queen(Player.white, new Position(1, 0))
         );
         List<Piece> opponentsPieces = Arrays.asList(
                 new King(Player.black, new Position(1, 0))
         );
         var score = boardScoringService.scorePieces(myPieces, opponentsPieces);
-        assertEquals(351, score);
+        assertEquals(348, score);
     }
 }
