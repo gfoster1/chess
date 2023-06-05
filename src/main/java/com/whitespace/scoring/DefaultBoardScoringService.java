@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.BiFunction;
 
 public class DefaultBoardScoringService implements BoardScoringService {
     private final Map<Class<?>, Integer> rankRubrik = new HashMap<>();
@@ -38,19 +37,19 @@ public class DefaultBoardScoringService implements BoardScoringService {
 
     @Override
     public int scorePieces(List<Piece> myPieces, List<Piece> opponentsPieces) {
-        int myScore = scoreMyPieces(myPieces);
-        int opponentScore = scoreMyPieces(opponentsPieces);
+        int myScore = scorePieces(myPieces);
         if (myScore == Integer.MIN_VALUE) {
             return Integer.MIN_VALUE;
         }
 
+        int opponentScore = scorePieces(opponentsPieces);
         if (opponentScore == Integer.MIN_VALUE) {
             return Integer.MAX_VALUE;
         }
         return myScore - opponentScore;
     }
 
-    private int scoreMyPieces(List<Piece> myPieces) {
+    private int scorePieces(List<Piece> myPieces) {
         var capturedMyKing = new AtomicBoolean(true);
         var numberOfSeenPieces = new HashMap<Class<?>, Integer>();
         var score = myPieces.stream()
@@ -58,15 +57,13 @@ public class DefaultBoardScoringService implements BoardScoringService {
                     if (piece instanceof King) {
                         capturedMyKing.set(false);
                     }
-
-
                 })
                 .map(piece -> {
                     var baseStrength = rankRubrik.get(piece.getClass());
 
                     int row = piece.getPosition().row();
                     var positionalModifier = (row == 3 || row == 4) ? 2 : 1;
-                    
+
                     int knightModifier = 5;
                     int bishopModifier = 6;
                     int rookModifier = 7;
