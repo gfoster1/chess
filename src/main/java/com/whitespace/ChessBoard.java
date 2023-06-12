@@ -6,6 +6,7 @@ import com.whitespace.board.Position;
 import com.whitespace.board.piece.Piece;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -31,4 +32,10 @@ public interface ChessBoard {
     boolean isKingInCheck(Player player);
 
     ChessBoard copy();
+
+    boolean isInvalidMove(Move move);
+
+    List<Piece> getBlackPieces();
+
+    List<Piece> getWhitePieces();
 }

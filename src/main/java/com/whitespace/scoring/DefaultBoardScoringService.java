@@ -1,6 +1,7 @@
 package com.whitespace.scoring;
 
 import com.whitespace.BoardScoringService;
+import com.whitespace.ChessBoard;
 import com.whitespace.Player;
 import com.whitespace.board.Board;
 import com.whitespace.board.piece.*;
@@ -22,7 +23,7 @@ public class DefaultBoardScoringService implements BoardScoringService {
         rankRubrik.put(Pawn.class, 1);
     }
 
-    public int scoreBoard(Board board, Player player) {
+    public int scoreBoard(ChessBoard board, Player player) {
         List<Piece> myPieces;
         List<Piece> opponentsPieces;
         if (player.equals(Player.black)) {
