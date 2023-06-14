@@ -25,10 +25,10 @@ class PieceTest {
         };
 
         var board = Mockito.mock(ChessBoard.class);
-        Stream<Move> builder = piece.generateMoves(false, 1, true, 1, board);
+        Stream<Move> builder = piece.generateMoves(false, 8, true, 8, board);
 
         List<Move> moves = builder.collect(Collectors.toList());
-        Assertions.assertThat(moves.size()).isEqualTo(4);
+        Assertions.assertThat(moves.size()).isEqualTo(14);
     }
 
     @Test
@@ -96,11 +96,11 @@ class PieceTest {
         var board = Mockito.mock(ChessBoard.class);
         Mockito.when(board.getWhitePieces()).thenReturn(Arrays.asList(
                 new Pawn(Player.white, new Position(2, 0)),
-                new Pawn(Player.white, new Position(2, 3)),
+                new Pawn(Player.white, new Position(2, 4)),
                 new Pawn(Player.white, new Position(0, 2)),
-                new Pawn(Player.white, new Position(3, 2))
+                new Pawn(Player.white, new Position(4, 2))
         ));
-        Stream<Move> builder = piece.generateMoves(false, 1, true, 1, board);
+        Stream<Move> builder = piece.generateMoves(false, 8, true, 8, board);
 
         List<Move> moves = builder.collect(Collectors.toList());
         Assertions.assertThat(moves.size()).isEqualTo(4);

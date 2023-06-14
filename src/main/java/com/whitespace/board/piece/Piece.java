@@ -5,9 +5,7 @@ import com.whitespace.Player;
 import com.whitespace.board.Move;
 import com.whitespace.board.Position;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -39,20 +37,11 @@ public abstract class Piece {
     public abstract List<Move> possibleMoves(ChessBoard board);
 
     protected Stream<Move> generateMoves(boolean generateDiagonal, int maxDiagonal, boolean generateHorizontal, int maxHorizontal, ChessBoard chessBoard) {
-
-        var canGoUp = true;
-        var canGoDown = true;
-        var canGoLeft = true;
-        var canGoRight = true;
-
-        var canGoUpLeft = true;
-        var canGoUpRight = true;
-        var canGoDownLeft = true;
-        var canGoDownRight = true;
-
         var row = position.row();
         var column = position.column();
         var maxBoardSize = 8;
+
+        var horizontalBlocks = new int[]{Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE};
 
         Stream.Builder<Move> builder = Stream.builder();
         for (int i = 1; i <= maxBoardSize; i++) {
@@ -71,17 +60,28 @@ public abstract class Piece {
             }
         }
 
-        var opponentPositions = switch (player) {
-            case white -> chessBoard.getWhitePieces();
-            case black -> chessBoard.getBlackPieces();
-        };
+        final List<Piece> myPositions = new ArrayList<>();
+        final List<Piece> opponentPositions = new ArrayList<>();
+        switch (player) {
+            case white -> {
+                myPositions.addAll(chessBoard.getWhitePieces());
+                opponentPositions.addAll(chessBoard.getBlackPieces());
+            }
+            case black -> {
+                myPositions.addAll(chessBoard.getBlackPieces());
+                opponentPositions.addAll(chessBoard.getWhitePieces());
+            }
+        }
 
+        var debug = true;
         System.out.println("position = " + position);
         System.out.println("row = " + row);
         System.out.println("column = " + column);
         return builder.build()
                 .peek(move -> {
-                    System.out.println("non filter moves = " + move);
+                    if (debug) {
+                        System.out.println("non filter moves = " + move);
+                    }
                 })
                 .filter(move -> {
                     Position destination = move.destination();
@@ -98,24 +98,25 @@ public abstract class Piece {
                     return r >= 0 && r < maxBoardSize;
                 })
                 .filter(move -> {
-                    boolean pass = true;
-                    if(generateHorizontal){
-                        // put horizontal test logic here
-                        pass = canGoRight;
-                        pass = canGoLeft;
-                    }
-                    return pass;
-                })
-                .filter(move -> {
                     // TODO This is a potential optimization since we can likely match at the end of process.  I need to think more about the math.
-                    boolean empty = opponentPositions.parallelStream()
+                    Optional<Position> potentialBlocker = myPositions.parallelStream()
                             .map(piece -> piece.getPosition())
                             .filter(position -> position.equals(move.destination()))
-                            .findAny().isEmpty();
-                    return empty;
+                            .findAny();
+
+                    var empty = potentialBlocker.isEmpty();
+                    if (!empty && generateHorizontal) {
+                        Position destination = potentialBlocker.get();
+                        var c = destination.column();
+                        var r = destination.row();
+                        // CHECK if they are on the same row then see if there are column blockers
+                    }
+                    return potentialBlocker.isEmpty();
                 })
                 .peek(move -> {
-                    System.out.println("filter moves = " + move);
+                    if (debug) {
+                        System.out.println("filter moves = " + move);
+                    }
                 })
                 .parallel();
     }
