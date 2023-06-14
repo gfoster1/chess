@@ -11,6 +11,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * TODO move strength calculations into the scoring service
+ * TODO add some fast caching for already seen boards
+ */
 public class DefaultBoardScoringService implements BoardScoringService {
     private final Map<Class<?>, Integer> rankRubrik = new HashMap<>();
 

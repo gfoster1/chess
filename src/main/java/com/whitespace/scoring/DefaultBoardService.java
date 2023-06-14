@@ -8,6 +8,7 @@ import com.whitespace.board.Move;
 import com.whitespace.board.piece.Piece;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -24,16 +25,17 @@ public class DefaultBoardService {
     }
 
     public Optional<Move> findBestMove(ChessBoard chessBoard) {
-        HashMap<Move, Integer> scores = new HashMap<>();
+        HashMap<Move, List<Integer>> scores = new HashMap<>();
         findBestMove(chessBoard, 0, null, scores);
         if (scores.isEmpty()) {
             return Optional.empty();
         }
-        Move move = scores.entrySet().stream().max(Comparator.comparing(Map.Entry::getValue)).get().getKey();
-        return Optional.of(move);
+//        Move move = scores.entrySet().stream().max(Comparator.comparing(Map.Entry::getValue)).get().getKey();
+//        return Optional.of(move);
+        return Optional.empty();
     }
 
-    private void findBestMove(ChessBoard board, int currentDepth, Move originalMove, Map<Move, Integer> scores) {
+    private void findBestMove(ChessBoard board, int currentDepth, Move originalMove, Map<Move, List<Integer>> scores) {
 
         var maxDepth = 1;
         if (currentDepth == maxDepth) {
@@ -70,20 +72,16 @@ public class DefaultBoardService {
                                     findBestMove(board, currentDepth + 1, move, scores);
                                 } else {
                                     var moveScore = boardScoringService.scoreBoard(board, player);
-                                    scores.compute(move, (myMove1, integer) -> {
-                                        if (integer == null || moveScore > integer) {
-                                            return moveScore;
+                                    scores.compute(move, (m, integers) -> {
+                                        if(integers == null){
+                                            return new ArrayList<>();
                                         }
-                                        return integer;
-                                    });
+                                        return integers;
+                                    }).add(moveScore);
                                 }
                                 board.revertLastMove();
                             });
                     board.revertLastMove();
                 });
-    }
-
-    private record ScoredMove(int score, Move move) {
-
     }
 }
