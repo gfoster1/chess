@@ -41,7 +41,6 @@ public abstract class Piece {
         var column = position.column();
         var maxBoardSize = 8;
 
-        var horizontalBlocks = new int[]{Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE};
 
         Stream.Builder<Move> builder = Stream.builder();
         for (int i = 1; i <= maxBoardSize; i++) {
@@ -73,16 +72,13 @@ public abstract class Piece {
             }
         }
 
+        final var horizontalBlocks = new int[]{Integer.MIN_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE};
         var debug = true;
         System.out.println("position = " + position);
         System.out.println("row = " + row);
         System.out.println("column = " + column);
-        return builder.build()
-                .peek(move -> {
-                    if (debug) {
-                        System.out.println("non filter moves = " + move);
-                    }
-                })
+        Stream<Move> stream = builder.build()
+
                 .filter(move -> {
                     Position destination = move.destination();
                     var c = destination.column();
@@ -103,21 +99,60 @@ public abstract class Piece {
                             .map(piece -> piece.getPosition())
                             .filter(position -> position.equals(move.destination()))
                             .findAny();
+                    System.out.println("potentialBlocker = " + potentialBlocker);
 
-                    var empty = potentialBlocker.isEmpty();
-                    if (!empty && generateHorizontal) {
+                    var openSpace = potentialBlocker.isEmpty();
+                    if (potentialBlocker.isPresent()) {
                         Position destination = potentialBlocker.get();
-                        var c = destination.column();
                         var r = destination.row();
                         // CHECK if they are on the same row then see if there are column blockers
+                        if (r == row) {
+                            var c = destination.column();
+                            if (c < column && c > horizontalBlocks[0]) {
+                                System.out.println("Blocker on left");
+                                horizontalBlocks[0] = c;
+                            }
+
+                            if (c > column && c < horizontalBlocks[1]) {
+                                System.out.println("Blocker on the right");
+                                horizontalBlocks[1] = c;
+                            }
+                        }
                     }
-                    return potentialBlocker.isEmpty();
+                    return openSpace;
                 })
                 .peek(move -> {
                     if (debug) {
-                        System.out.println("filter moves = " + move);
+                        System.out.println("filter (pre) moves = " + move);
+                    }
+                })
+                .filter(move -> {
+                    var notBlocked = true;
+                    var dest = move.destination();
+                    var r = dest.row();
+                    if (r == row) {
+                        var c = dest.column();
+                        System.out.println("c = " + c);
+                        System.out.println("horizontalBlocks = " + horizontalBlocks[0]);
+                        System.out.println("move = " + move);
+                        if (c < column && horizontalBlocks[0] != Integer.MIN_VALUE) {
+                            notBlocked = c < horizontalBlocks[0];
+                            System.out.println("not blocked to the left = " + notBlocked);
+                        }
+
+                        if (c > column && horizontalBlocks[1] != Integer.MAX_VALUE) {
+                            System.out.println("not blocked to the right = " + notBlocked);
+                            notBlocked = c > horizontalBlocks[1];
+                        }
+                    }
+                    return notBlocked;
+                })
+                .peek(move -> {
+                    if (debug) {
+                        System.out.println("filter (post) moves = " + move);
                     }
                 })
                 .parallel();
+        return stream;
     }
 }

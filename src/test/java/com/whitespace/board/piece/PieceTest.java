@@ -86,7 +86,7 @@ class PieceTest {
 
     @Test
     public void testBlockedHorizontalBySamePieces() {
-        Piece piece = new Piece(Player.white, new Position(2, 2)) {
+        Piece piece = new Piece(Player.white, new Position(2, 3)) {
             @Override
             public List<Move> possibleMoves(ChessBoard board) {
                 return null;
@@ -95,15 +95,15 @@ class PieceTest {
 
         var board = Mockito.mock(ChessBoard.class);
         Mockito.when(board.getWhitePieces()).thenReturn(Arrays.asList(
-                new Pawn(Player.white, new Position(2, 0)),
-                new Pawn(Player.white, new Position(2, 4)),
-                new Pawn(Player.white, new Position(0, 2)),
-                new Pawn(Player.white, new Position(4, 2))
+                new Pawn(Player.white, new Position(2, 1)),
+                new Pawn(Player.white, new Position(2, 5))
+//                new Pawn(Player.white, new Position(0, 2)),
+//                new Pawn(Player.white, new Position(4, 2))
         ));
         Stream<Move> builder = piece.generateMoves(false, 8, true, 8, board);
 
         List<Move> moves = builder.collect(Collectors.toList());
-        Assertions.assertThat(moves.size()).isEqualTo(4);
+        Assertions.assertThat(moves.size()).isEqualTo(10);
     }
 
     @Test
