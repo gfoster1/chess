@@ -41,7 +41,6 @@ public abstract class Piece {
         var column = position.column();
         var maxBoardSize = 8;
 
-
         Stream.Builder<Move> builder = Stream.builder();
         for (int i = 1; i <= maxBoardSize; i++) {
             if (generateHorizontal && i < maxHorizontal + 1) {
@@ -59,8 +58,8 @@ public abstract class Piece {
             }
         }
 
-        final List<Piece> myPositions = new ArrayList<>();
-        final List<Piece> opponentPositions = new ArrayList<>();
+        final List<Piece> myPositions = new ArrayList<>(17);
+        final List<Piece> opponentPositions = new ArrayList<>(17);
         switch (player) {
             case white -> {
                 myPositions.addAll(chessBoard.getWhitePieces());
@@ -72,13 +71,13 @@ public abstract class Piece {
             }
         }
 
-        final var horizontalBlocks = new int[]{Integer.MIN_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE};
+        final var diagonalBlocks = new int[]{Integer.MIN_VALUE, Integer.MAX_VALUE, Integer.MIN_VALUE, Integer.MAX_VALUE};
+        final var horizontalBlocks = new int[]{Integer.MIN_VALUE, Integer.MAX_VALUE, Integer.MIN_VALUE, Integer.MAX_VALUE};
         var debug = true;
         System.out.println("position = " + position);
         System.out.println("row = " + row);
         System.out.println("column = " + column);
         Stream<Move> stream = builder.build()
-
                 .filter(move -> {
                     Position destination = move.destination();
                     var c = destination.column();
@@ -97,7 +96,10 @@ public abstract class Piece {
                     // TODO This is a potential optimization since we can likely match at the end of process.  I need to think more about the math.
                     Optional<Position> potentialBlocker = myPositions.parallelStream()
                             .map(piece -> piece.getPosition())
-                            .filter(position -> position.equals(move.destination()))
+                            .filter(position -> {
+                                var dest = move.destination();
+                                return position.column() == dest.column() && position.row() == dest.row();
+                            })
                             .findAny();
                     System.out.println("potentialBlocker = " + potentialBlocker);
 
@@ -105,19 +107,10 @@ public abstract class Piece {
                     if (potentialBlocker.isPresent()) {
                         Position destination = potentialBlocker.get();
                         var r = destination.row();
-                        // CHECK if they are on the same row then see if there are column blockers
-                        if (r == row) {
-                            var c = destination.column();
-                            if (c < column && c > horizontalBlocks[0]) {
-                                System.out.println("Blocker on left");
-                                horizontalBlocks[0] = c;
-                            }
-
-                            if (c > column && c < horizontalBlocks[1]) {
-                                System.out.println("Blocker on the right");
-                                horizontalBlocks[1] = c;
-                            }
-                        }
+                        var c = destination.column();
+                        checkIfBlockedLeftAndRight(row, column, horizontalBlocks, r, c);
+                        checkIfBlockedUpAndDown(row, column, horizontalBlocks, r, c);
+                        checkIfBlockedUpRightAndLeft(row, column, diagonalBlocks, r, c);
                     }
                     return openSpace;
                 })
@@ -126,33 +119,165 @@ public abstract class Piece {
                         System.out.println("filter (pre) moves = " + move);
                     }
                 })
-                .filter(move -> {
-                    var notBlocked = true;
-                    var dest = move.destination();
-                    var r = dest.row();
-                    if (r == row) {
-                        var c = dest.column();
-                        System.out.println("c = " + c);
-                        System.out.println("horizontalBlocks = " + horizontalBlocks[0]);
-                        System.out.println("move = " + move);
-                        if (c < column && horizontalBlocks[0] != Integer.MIN_VALUE) {
-                            notBlocked = c < horizontalBlocks[0];
-                            System.out.println("not blocked to the left = " + notBlocked);
-                        }
-
-                        if (c > column && horizontalBlocks[1] != Integer.MAX_VALUE) {
-                            System.out.println("not blocked to the right = " + notBlocked);
-                            notBlocked = c > horizontalBlocks[1];
-                        }
-                    }
-                    return notBlocked;
-                })
+                .filter(move -> filterHorizontalBlocks(row, column, horizontalBlocks, move))
+                .filter(move -> filterVerticalBlocks(row, column, horizontalBlocks, move))
+                .filter(move -> filterDiagonalBlocks(row, column, diagonalBlocks, move))
                 .peek(move -> {
                     if (debug) {
                         System.out.println("filter (post) moves = " + move);
+                        for (int block : horizontalBlocks) {
+                            System.out.println("block = " + block);
+                        }
                     }
-                })
-                .parallel();
+                });
         return stream;
+    }
+
+    private void checkIfBlockedUpRightAndLeft(int row, int column, int[] blockedArray, int r, int c) {
+        int rise = c - column;
+        int run = r - row;
+        System.out.println("run = " + run);
+        System.out.println("rise = " + rise);
+        if (rise != 0 && run != 0 && Math.abs(rise / run) == 1) {
+            System.out.println("Blocker on a diagonal");
+            System.out.println("diagonal r = " + r);
+            System.out.println("diagonal c = " + c);
+            if (r < row && c > column) {
+                System.out.println("Blocker on up");
+                if (r > blockedArray[0]) {
+                    blockedArray[0] = r;
+                }
+            }
+
+            if (r > row && c > column) {
+                System.out.println("Blocker on left");
+                if (r < blockedArray[1]) {
+                    blockedArray[1] = r;
+                }
+            }
+
+            if (r < row && c < column) {
+                System.out.println("Blocker on up");
+                if (r > blockedArray[2]) {
+                    blockedArray[2] = r;
+                }
+            }
+
+            if (r > row && c < column) {
+                System.out.println("Blocker on the right");
+                if (r < blockedArray[3]) {
+                    blockedArray[3] = r;
+                }
+            }
+        }
+    }
+
+    private static void checkIfBlockedUpAndDown(int row, int column, int[] horizontalBlocks, int r, int c) {
+        if (c == column) {
+            if (r < row && r > horizontalBlocks[2]) {
+                System.out.println("Blocker on up");
+                horizontalBlocks[2] = r;
+            }
+
+            if (r > row && r < horizontalBlocks[3]) {
+                System.out.println("Blocker on the up");
+                horizontalBlocks[3] = r;
+            }
+        }
+    }
+
+    private static void checkIfBlockedLeftAndRight(int row, int column, int[] horizontalBlocks, int r, int c) {
+        if (r == row) {
+            if (c < column && c > horizontalBlocks[0]) {
+                System.out.println("Blocker on left");
+                horizontalBlocks[0] = c;
+            }
+
+            if (c > column && c < horizontalBlocks[1]) {
+                System.out.println("Blocker on the right");
+                horizontalBlocks[1] = c;
+            }
+        }
+    }
+
+    private boolean filterDiagonalBlocks(int row, int column, int[] blockedArray, Move move) {
+        var c = move.destination().column();
+        var r = move.destination().row();
+        int rise = c - column;
+        int run = r - row;
+        System.out.println("run = " + run);
+        System.out.println("rise = " + rise);
+        var notBlocked = true;
+        if (rise != 0 && run != 0 && Math.abs(rise / run) == 1) {
+            System.out.println("Blocker on a diagonal");
+            System.out.println("diagonal r = " + r);
+            System.out.println("diagonal c = " + c);
+            if (r < row && c > column) {
+                System.out.println("Blocker on up");
+                notBlocked = r > blockedArray[0];
+            }
+
+            if (r > row && c > column) {
+                System.out.println("Blocker on left");
+                notBlocked = r < blockedArray[1];
+            }
+
+            if (r < row && c < column) {
+                System.out.println("Blocker on up");
+                notBlocked = r > blockedArray[2];
+            }
+
+            if (r > row && c < column) {
+                System.out.println("Blocker on the right");
+                notBlocked = r < blockedArray[3];
+            }
+        }
+
+        System.out.println("notBlocked = " + notBlocked);
+        return notBlocked;
+    }
+
+    private static boolean filterHorizontalBlocks(int row, int column, int[] horizontalBlocks, Move move) {
+        var notBlocked = true;
+        var dest = move.destination();
+        var r = dest.row();
+        if (r == row) {
+            var c = dest.column();
+            System.out.println("c = " + c);
+            System.out.println("horizontalBlocks = " + horizontalBlocks[0]);
+            System.out.println("move = " + move);
+            if (c < column && horizontalBlocks[0] != Integer.MIN_VALUE) {
+                notBlocked = c > horizontalBlocks[0];
+                System.out.println("not blocked to the left = " + notBlocked);
+            }
+
+            if (c > column && horizontalBlocks[1] != Integer.MAX_VALUE) {
+                notBlocked = c < horizontalBlocks[1];
+                System.out.println("not blocked to the right = " + notBlocked);
+            }
+        }
+        return notBlocked;
+    }
+
+    private static boolean filterVerticalBlocks(int row, int column, int[] horizontalBlocks, Move move) {
+        var notBlocked = true;
+        var dest = move.destination();
+        var c = dest.column();
+        if (c == column) {
+            var r = dest.row();
+            System.out.println("c = " + c);
+            System.out.println("horizontalBlocks = " + horizontalBlocks[0]);
+            System.out.println("move = " + move);
+            if (r < row && horizontalBlocks[2] != Integer.MIN_VALUE) {
+                notBlocked = r > horizontalBlocks[2];
+                System.out.println("not blocked to the left = " + notBlocked);
+            }
+
+            if (r > row && horizontalBlocks[3] != Integer.MAX_VALUE) {
+                notBlocked = r < horizontalBlocks[3];
+                System.out.println("not blocked to the right = " + notBlocked);
+            }
+        }
+        return notBlocked;
     }
 }
