@@ -18,8 +18,11 @@ public class Rook extends Piece {
 
     @Override
     public List<Move> possibleMoves(ChessBoard board) {
-        // handle a castle
-        return Collections.emptyList();
+        return possibleStreamMoves(board).collect(Collectors.toList());
     }
 
+    @Override
+    public Stream<Move> possibleStreamMoves(ChessBoard board) {
+        return generateMoves(false, 8, true, 8, board);
+    }
 }

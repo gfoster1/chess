@@ -18,11 +18,11 @@ public class Queen extends Piece {
 
     @Override
     public List<Move> possibleMoves(ChessBoard board) {
-        return Collections.emptyList();
-//        Stream.Builder<Move> builder = Stream.builder();
-//        int size = 8;
-//        generateValidDiagonalMoves(builder, board);
-//        generateValidHorizontalMoves(builder, board);
-//        return builder.build().collect(Collectors.toList());
+        return possibleStreamMoves(board).collect(Collectors.toList());
+    }
+
+    @Override
+    public Stream<Move> possibleStreamMoves(ChessBoard board) {
+        return generateMoves(true, 8, true, 8, board);
     }
 }

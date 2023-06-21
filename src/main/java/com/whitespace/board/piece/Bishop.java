@@ -17,9 +17,11 @@ public class Bishop extends Piece {
 
     @Override
     public List<Move> possibleMoves(ChessBoard board) {
-        return Collections.emptyList();
-//        Stream.Builder<Move> builder = Stream.builder();
-//        generateValidDiagonalMoves(builder, board, 8);
-//        return builder.build().collect(Collectors.toList());
+        return possibleStreamMoves(board).collect(Collectors.toList());
+    }
+
+    @Override
+    public Stream<Move> possibleStreamMoves(ChessBoard board) {
+        return generateMoves(true, 8, false, 8, board);
     }
 }

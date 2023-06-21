@@ -31,6 +31,8 @@ public abstract class Piece {
 
     public abstract List<Move> possibleMoves(ChessBoard board);
 
+    public abstract Stream<Move> possibleStreamMoves(ChessBoard board);
+
     protected Stream<Move> generateMoves(boolean generateDiagonal, int maxDiagonal, boolean generateHorizontal, int maxHorizontal, ChessBoard chessBoard) {
         var row = position.row();
         var column = position.column();
