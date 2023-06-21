@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -215,6 +214,78 @@ class PieceTest {
 
                 // - -
                 new Move(piece, new Position(3, 3))
+        };
+        Assertions.assertThat(actual).containsOnly(expected);
+    }
+
+    @Test
+    public void blockedDiagonallyByOpposingPieces() {
+        Piece piece = new Piece(Player.white, new Position(2, 2)) {
+            @Override
+            public List<Move> possibleMoves(ChessBoard board) {
+                return null;
+            }
+        };
+
+        var board = Mockito.mock(ChessBoard.class);
+        List<Piece> blackPieces = Arrays.asList(
+                // + +
+                new Pawn(Player.black, new Position(0, 0)),
+                // + -
+                new Pawn(Player.black, new Position(0, 4)),
+                // - +
+                new Pawn(Player.black, new Position(4, 0)),
+                // - -
+                new Pawn(Player.black, new Position(4, 4))
+        );
+        Mockito.when(board.getBlackPieces()).thenReturn(blackPieces);
+        Stream<Move> builder = piece.generateMoves(true, 8, false, 8, board);
+
+        List<Move> actual = builder.collect(Collectors.toList());
+        Move[] expected = {
+                new Move(piece, new Position(0, 0)),
+                new Move(piece, new Position(0, 4)),
+                new Move(piece, new Position(4, 0)),
+                new Move(piece, new Position(4, 4)),
+
+                new Move(piece, new Position(1, 1)),
+                new Move(piece, new Position(1, 3)),
+                new Move(piece, new Position(3, 1)),
+                new Move(piece, new Position(3, 3))
+        };
+        Assertions.assertThat(actual).containsOnly(expected);
+    }
+
+    @Test
+    public void blockedHorizontallyByOpposingPieces() {
+        Piece piece = new Piece(Player.white, new Position(2, 2)) {
+            @Override
+            public List<Move> possibleMoves(ChessBoard board) {
+                return null;
+            }
+        };
+
+        var board = Mockito.mock(ChessBoard.class);
+        List<Piece> blackPieces = Arrays.asList(
+                new Pawn(Player.black, new Position(0, 2)),
+                new Pawn(Player.black, new Position(2, 0)),
+                new Pawn(Player.black, new Position(2, 4)),
+                new Pawn(Player.black, new Position(4, 2))
+        );
+        Mockito.when(board.getBlackPieces()).thenReturn(blackPieces);
+        Stream<Move> builder = piece.generateMoves(false, 8, true, 8, board);
+
+        List<Move> actual = builder.collect(Collectors.toList());
+        Move[] expected = {
+                new Move(piece, new Position(0, 2)),
+                new Move(piece, new Position(2, 0)),
+                new Move(piece, new Position(2, 4)),
+                new Move(piece, new Position(4, 2)),
+
+                new Move(piece, new Position(1, 2)),
+                new Move(piece, new Position(2, 1)),
+                new Move(piece, new Position(2, 3)),
+                new Move(piece, new Position(3, 2))
         };
         Assertions.assertThat(actual).containsOnly(expected);
     }
