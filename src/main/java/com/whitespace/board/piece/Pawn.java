@@ -5,7 +5,6 @@ import com.whitespace.Player;
 import com.whitespace.board.Move;
 import com.whitespace.board.Position;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -24,7 +23,7 @@ public class Pawn extends Piece {
     }
 
     @Override
-    public Stream<Move> possibleStreamMoves(ChessBoard board) {
+    public Stream<Move> possibleStreamMoves(ChessBoard chessBoard) {
         Stream.Builder<Move> builder = Stream.builder();
         int multipler = switch (player) {
             case white -> 1;
@@ -34,7 +33,7 @@ public class Pawn extends Piece {
         if (position.equals(startingPosition)) {
             var p1 = new Position(startingPosition.row() + (1 * multipler), startingPosition.column());
             var p2 = new Position(startingPosition.row() + (2 * multipler), startingPosition.column());
-            if (!board.isSpaceTaken(p1) && !board.isSpaceTaken(p2)) {
+            if (areSpacesOpen(chessBoard, p1, p2)) {
                 builder.add(new Move(this, p2));
             }
         }
@@ -43,24 +42,51 @@ public class Pawn extends Piece {
         int maxBoardSize = 8;
         if (row >= 0 && row < maxBoardSize) {
             var p1 = new Position(row, position.column());
-            if (!board.isSpaceTaken(p1)) {
+            if (areSpacesOpen(chessBoard, p1)) {
                 builder.add(new Move(this, p1));
             }
 
             if (position.column() + 1 < maxBoardSize) {
                 var p2 = new Position(row, position.column() + 1);
-                if (board.isSpaceTakenByOpposingPlayerPiece(p2, player)) {
+                if (isSpaceTakenByOpposingPlayerPiece(chessBoard, p2)) {
                     builder.add(new Move(this, p2));
                 }
             }
 
             if (position.column() - 1 >= 0) {
                 var p3 = new Position(row, position.column() - 1);
-                if (board.isSpaceTakenByOpposingPlayerPiece(p3, player)) {
+                if (isSpaceTakenByOpposingPlayerPiece(chessBoard, p3)) {
                     builder.add(new Move(this, p3));
                 }
             }
         }
         return builder.build();
+    }
+
+    private boolean areSpacesOpen(ChessBoard chessBoard, Position... positions) {
+        return Stream.concat(chessBoard.getWhitePieces().parallelStream(), chessBoard.getBlackPieces().parallelStream())
+                .map(piece -> piece.getPosition())
+                .filter(p -> {
+                    for (Position position : positions) {
+                        if (position.row() == p.row() && position.column() == p.column()) {
+                            return true;
+                        }
+                    }
+                    return false;
+                })
+                .findAny()
+                .isEmpty();
+    }
+
+    private boolean isSpaceTakenByOpposingPlayerPiece(ChessBoard chessBoard, Position position) {
+        var myPieces = switch (player) {
+            case black -> chessBoard.getWhitePieces();
+            case white -> chessBoard.getBlackPieces();
+        };
+        return myPieces.parallelStream()
+                .map(piece -> piece.getPosition())
+                .filter(p -> p.column() == position.column() && p.row() == position.row())
+                .findAny()
+                .isPresent();
     }
 }

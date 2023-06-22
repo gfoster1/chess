@@ -72,8 +72,7 @@ public class DefaultBoardScoringService implements BoardScoringService {
                     int knightModifier = 5;
                     int bishopModifier = 6;
                     int rookModifier = 7;
-                    int numericModifier =
-                    switch (piece) {
+                    int numericModifier = switch (piece) {
                         case Knight knight ->
                                 numberOfSeenPieces.compute(knight.getClass(), (clazz, integer) -> integer == null ? 0 : knightModifier);
                         case Bishop bishop ->

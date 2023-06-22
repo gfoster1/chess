@@ -35,7 +35,7 @@ public class DefaultBoardService {
         return Optional.empty();
     }
 
-    private void findBestMove(ChessBoard board, int currentDepth, Move originalMove, Map<Move, List<Integer>> scores) {
+    private void findBestMove(ChessBoard chessBoard, int currentDepth, Move originalMove, Map<Move, List<Integer>> scores) {
 
         var maxDepth = 1;
         if (currentDepth == maxDepth) {
@@ -47,41 +47,40 @@ public class DefaultBoardService {
             return;
         }
 
-        var myPieces =
-                switch (player) {
-                    case black -> board.getBlackPieces();
-                    case white -> board.getWhitePieces();
-                };
-        myPieces.stream()
-                .flatMap((Function<Piece, Stream<Move>>) piece -> piece.possibleMoves(board).stream())
-                .filter(move -> !board.isInvalidMove(move))
+        var myPieces = switch (player) {
+            case black -> chessBoard.getBlackPieces();
+            case white -> chessBoard.getWhitePieces();
+        };
+        myPieces.parallelStream()
+                .flatMap((Function<Piece, Stream<Move>>) piece -> piece.possibleStreamMoves(chessBoard))
+                .filter(move -> !chessBoard.isInvalidMove(move))
                 .forEach(myMove -> {
-                    board.applyMove(myMove, true);
+                    chessBoard.applyMove(myMove, true);
                     // TODO add a check if this is a game winning move
                     var opponentsPieces = switch (player) {
-                        case black -> board.getWhitePieces();
-                        case white -> board.getBlackPieces();
+                        case black -> chessBoard.getWhitePieces();
+                        case white -> chessBoard.getBlackPieces();
                     };
                     opponentsPieces.stream()
-                            .flatMap((Function<Piece, Stream<Move>>) piece -> piece.possibleMoves(board).stream())
-                            .filter(move -> !board.isInvalidMove(move))
+                            .flatMap((Function<Piece, Stream<Move>>) piece -> piece.possibleMoves(chessBoard).stream())
+                            .filter(move -> !chessBoard.isInvalidMove(move))
                             .forEach(opponentsMove -> {
-                                board.applyMove(opponentsMove, true);
+                                chessBoard.applyMove(opponentsMove, true);
                                 Move move = originalMove == null ? myMove : originalMove;
                                 if (currentDepth + 1 < maxDepth) {
-                                    findBestMove(board, currentDepth + 1, move, scores);
+                                    findBestMove(chessBoard, currentDepth + 1, move, scores);
                                 } else {
-                                    var moveScore = boardScoringService.scoreBoard(board, player);
+                                    var moveScore = boardScoringService.scoreBoard(chessBoard, player);
                                     scores.compute(move, (m, integers) -> {
-                                        if(integers == null){
+                                        if (integers == null) {
                                             return new ArrayList<>();
                                         }
                                         return integers;
                                     }).add(moveScore);
                                 }
-                                board.revertLastMove();
+                                chessBoard.revertLastMove();
                             });
-                    board.revertLastMove();
+                    chessBoard.revertLastMove();
                 });
     }
 }

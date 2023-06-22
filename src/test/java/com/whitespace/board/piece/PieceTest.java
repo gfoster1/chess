@@ -21,6 +21,11 @@ class PieceTest {
             public List<Move> possibleMoves(ChessBoard board) {
                 return null;
             }
+
+            @Override
+            public Stream<Move> possibleStreamMoves(ChessBoard board) {
+                return null;
+            }
         };
 
         var board = Mockito.mock(ChessBoard.class);
@@ -35,6 +40,11 @@ class PieceTest {
         Piece piece = new Piece(Player.white, new Position(1, 1)) {
             @Override
             public List<Move> possibleMoves(ChessBoard board) {
+                return null;
+            }
+
+            @Override
+            public Stream<Move> possibleStreamMoves(ChessBoard board) {
                 return null;
             }
         };
@@ -53,6 +63,11 @@ class PieceTest {
             public List<Move> possibleMoves(ChessBoard board) {
                 return null;
             }
+
+            @Override
+            public Stream<Move> possibleStreamMoves(ChessBoard board) {
+                return null;
+            }
         };
 
         var board = Mockito.mock(ChessBoard.class);
@@ -67,6 +82,11 @@ class PieceTest {
         Piece piece = new Piece(Player.white, new Position(0, 0)) {
             @Override
             public List<Move> possibleMoves(ChessBoard board) {
+                return null;
+            }
+
+            @Override
+            public Stream<Move> possibleStreamMoves(ChessBoard board) {
                 return null;
             }
         };
@@ -88,6 +108,11 @@ class PieceTest {
         Piece piece = new Piece(Player.white, new Position(2, 3)) {
             @Override
             public List<Move> possibleMoves(ChessBoard board) {
+                return null;
+            }
+
+            @Override
+            public Stream<Move> possibleStreamMoves(ChessBoard board) {
                 return null;
             }
         };
@@ -120,6 +145,10 @@ class PieceTest {
             public List<Move> possibleMoves(ChessBoard board) {
                 return null;
             }
+
+            public Stream<Move> possibleStreamMoves(ChessBoard board) {
+                return null;
+            }
         };
 
         var board = Mockito.mock(ChessBoard.class);
@@ -148,6 +177,10 @@ class PieceTest {
         Piece piece = new Piece(Player.white, new Position(3, 2)) {
             @Override
             public List<Move> possibleMoves(ChessBoard board) {
+                return null;
+            }
+
+            public Stream<Move> possibleStreamMoves(ChessBoard board) {
                 return null;
             }
         };
@@ -183,6 +216,10 @@ class PieceTest {
         Piece piece = new Piece(Player.white, new Position(2, 2)) {
             @Override
             public List<Move> possibleMoves(ChessBoard board) {
+                return null;
+            }
+
+            public Stream<Move> possibleStreamMoves(ChessBoard board) {
                 return null;
             }
         };
@@ -225,6 +262,10 @@ class PieceTest {
             public List<Move> possibleMoves(ChessBoard board) {
                 return null;
             }
+
+            public Stream<Move> possibleStreamMoves(ChessBoard board) {
+                return null;
+            }
         };
 
         var board = Mockito.mock(ChessBoard.class);
@@ -261,6 +302,10 @@ class PieceTest {
         Piece piece = new Piece(Player.white, new Position(2, 2)) {
             @Override
             public List<Move> possibleMoves(ChessBoard board) {
+                return null;
+            }
+
+            public Stream<Move> possibleStreamMoves(ChessBoard board) {
                 return null;
             }
         };

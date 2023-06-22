@@ -17,20 +17,6 @@ public interface ChessBoard {
 
     MoveResult applyMove(Move move, boolean debug);
 
-    Optional<Position> getPosition(int row, int column);
-
-    boolean isSpaceTakenByMyPiece(Position destination, Player player);
-
-    boolean isSpaceTakenByOpposingPlayerPiece(Position destination, Player player);
-
-    boolean isSpaceTaken(Position position);
-
-    Collection<Piece> getPieces();
-
-    Stream<Move> getPossibleMoves(Player player);
-
-    boolean isKingInCheck(Player player);
-
     ChessBoard copy();
 
     boolean isInvalidMove(Move move);
