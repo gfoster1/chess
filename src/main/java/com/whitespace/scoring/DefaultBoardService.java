@@ -3,16 +3,11 @@ package com.whitespace.scoring;
 import com.whitespace.BoardScoringService;
 import com.whitespace.ChessBoard;
 import com.whitespace.Player;
-import com.whitespace.board.Board;
 import com.whitespace.board.Move;
 import com.whitespace.board.piece.Piece;
 
 import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class DefaultBoardService {

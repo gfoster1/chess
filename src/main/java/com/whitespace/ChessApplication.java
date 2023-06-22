@@ -1,6 +1,6 @@
 package com.whitespace;
 
-import com.whitespace.board.Board;
+import com.whitespace.board.DefaultChessBoard;
 import com.whitespace.scoring.DefaultBoardScoringService;
 import com.whitespace.scoring.DefaultBoardService;
 
@@ -9,7 +9,7 @@ public class ChessApplication {
         BoardScoringService boardScoringService = new DefaultBoardScoringService();
         var blackBoardService = new DefaultBoardService(Player.black, boardScoringService);
         var whiteBoardService = new DefaultBoardService(Player.white, boardScoringService);
-        var board = new Board(blackBoardService, whiteBoardService);
-        board.play();
+        var chessBoard = new DefaultChessBoard();
+        chessBoard.play();
     }
 }

@@ -3,7 +3,6 @@ package com.whitespace.scoring;
 import com.whitespace.BoardScoringService;
 import com.whitespace.ChessBoard;
 import com.whitespace.Player;
-import com.whitespace.board.Board;
 import com.whitespace.board.piece.*;
 
 import java.util.HashMap;

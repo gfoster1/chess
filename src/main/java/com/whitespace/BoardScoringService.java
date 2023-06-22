@@ -1,6 +1,5 @@
 package com.whitespace;
 
-import com.whitespace.board.Board;
 import com.whitespace.board.piece.Piece;
 
 import java.util.List;

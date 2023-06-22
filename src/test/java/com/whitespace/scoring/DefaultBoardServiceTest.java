@@ -3,7 +3,6 @@ package com.whitespace.scoring;
 import com.whitespace.BoardScoringService;
 import com.whitespace.ChessBoard;
 import com.whitespace.Player;
-import com.whitespace.board.Board;
 import com.whitespace.board.Move;
 import com.whitespace.board.Position;
 import com.whitespace.board.piece.Pawn;
@@ -12,8 +11,6 @@ import org.mockito.Mockito;
 
 import java.util.Collections;
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class DefaultBoardServiceTest {
 

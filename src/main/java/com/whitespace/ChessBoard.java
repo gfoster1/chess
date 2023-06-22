@@ -15,9 +15,7 @@ public interface ChessBoard {
 
     void revertLastMove();
 
-    MoveResult applyMove(Move move, boolean debug);
-
-    ChessBoard copy();
+    ChessBoard applyMove(Move move, boolean debug);
 
     boolean isInvalidMove(Move move);
 

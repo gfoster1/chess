@@ -11,7 +11,36 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-public class DefaultChessBoard  {
+public class DefaultChessBoard  implements ChessBoard{
+    @Override
+    public void play() {
+
+    }
+
+    @Override
+    public void revertLastMove() {
+
+    }
+
+    @Override
+    public ChessBoard applyMove(Move move, boolean debug) {
+        return null;
+    }
+
+    @Override
+    public boolean isInvalidMove(Move move) {
+        return false;
+    }
+
+    @Override
+    public List<Piece> getBlackPieces() {
+        return null;
+    }
+
+    @Override
+    public List<Piece> getWhitePieces() {
+        return null;
+    }
 //    public static final int MAX_BOARD_SIZE = 8;
 //
 //    private static final Map<Class, Constructor> CLASS_CACHE = new HashMap<>();
