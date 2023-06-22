@@ -9,7 +9,7 @@ public class ChessApplication {
         BoardScoringService boardScoringService = new DefaultBoardScoringService();
         var blackBoardService = new DefaultBoardService(Player.black, boardScoringService);
         var whiteBoardService = new DefaultBoardService(Player.white, boardScoringService);
-        var chessBoard = new DefaultChessBoard();
+        var chessBoard = new DefaultChessBoard(blackBoardService, whiteBoardService);
         chessBoard.play();
     }
 }

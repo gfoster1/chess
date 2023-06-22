@@ -25,7 +25,6 @@ class DefaultBoardServiceTest {
         ChessBoard board = Mockito.mock(ChessBoard.class);
         Mockito.when(board.getBlackPieces()).thenReturn(Collections.singletonList(blackPawn));
         Mockito.when(board.getWhitePieces()).thenReturn(Collections.singletonList(whitePawn));
-        Mockito.when(board.isInvalidMove(Mockito.any())).thenReturn(false);
 
         Mockito.when(boardScoreService.scorePieces(Mockito.anyList(), Mockito.anyList())).thenReturn(50);
         Mockito.when(boardScoreService.scoreBoard(Mockito.any(), Mockito.any())).thenReturn(50);

@@ -5,20 +5,76 @@ import com.whitespace.ChessBoard;
 import com.whitespace.Player;
 import com.whitespace.board.piece.*;
 
-import java.lang.reflect.Constructor;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
-import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.List;
 
-public class DefaultChessBoard  implements ChessBoard{
-    @Override
-    public void play() {
+public class DefaultChessBoard implements ChessBoard {
+    private final List<Piece> blackPieces = new ArrayList<>(16);
+    private final List<Piece> whitePieces = new ArrayList<>(16);
+    private final BestMoveService blackBoardScoringService;
+    private final BestMoveService whiteBoardScoringService;
 
+    public DefaultChessBoard(BestMoveService blackBoardScoringService, BestMoveService whiteBoardScoringService) {
+        this.blackBoardScoringService = blackBoardScoringService;
+        this.whiteBoardScoringService = whiteBoardScoringService;
+        initializeBlackPieces();
+        initializeWhitePieces();
+    }
+
+    private void initializeBlackPieces() {
+        for (int i = 0; i < 8; i++) {
+            var position = new Position(6, i);
+            var pawn = new Pawn(Player.black, position);
+            blackPieces.add(pawn);
+        }
+
+        Rook rook1 = new Rook(Player.black, new Position(7, 0));
+        Knight knight1 = new Knight(Player.black, new Position(7, 1));
+        Bishop bishop1 = new Bishop(Player.black, new Position(7, 2));
+        Queen queen = new Queen(Player.black, new Position(7, 3));
+        King king = new King(Player.black, new Position(7, 4));
+        Bishop bishop2 = new Bishop(Player.black, new Position(7, 5));
+        Knight knight2 = new Knight(Player.black, new Position(7, 6));
+        Rook rook2 = new Rook(Player.black, new Position(7, 7));
+
+        blackPieces.add(rook1);
+        blackPieces.add(bishop1);
+        blackPieces.add(knight1);
+        blackPieces.add(queen);
+        blackPieces.add(king);
+        blackPieces.add(knight2);
+        blackPieces.add(bishop2);
+        blackPieces.add(rook2);
+    }
+
+    private void initializeWhitePieces() {
+        for (int i = 0; i < 8; i++) {
+            var position = new Position(1, i);
+            var pawn = new Pawn(Player.white, position);
+            whitePieces.add(pawn);
+        }
+
+        Rook rook1 = new Rook(Player.white, new Position(0, 0));
+        Knight knight1 = new Knight(Player.white, new Position(0, 1));
+        Bishop bishop1 = new Bishop(Player.white, new Position(0, 2));
+        Queen queen = new Queen(Player.white, new Position(0, 3));
+        King king = new King(Player.white, new Position(0, 4));
+        Bishop bishop2 = new Bishop(Player.white, new Position(0, 5));
+        Knight knight2 = new Knight(Player.white, new Position(0, 6));
+        Rook rook2 = new Rook(Player.white, new Position(0, 7));
+
+        whitePieces.add(rook1);
+        whitePieces.add(bishop1);
+        whitePieces.add(knight1);
+        whitePieces.add(queen);
+        whitePieces.add(king);
+        whitePieces.add(knight2);
+        whitePieces.add(bishop2);
+        whitePieces.add(rook2);
     }
 
     @Override
-    public void revertLastMove() {
+    public void play() {
 
     }
 
@@ -28,18 +84,13 @@ public class DefaultChessBoard  implements ChessBoard{
     }
 
     @Override
-    public boolean isInvalidMove(Move move) {
-        return false;
-    }
-
-    @Override
     public List<Piece> getBlackPieces() {
-        return null;
+        return blackPieces;
     }
 
     @Override
     public List<Piece> getWhitePieces() {
-        return null;
+        return whitePieces;
     }
 //    public static final int MAX_BOARD_SIZE = 8;
 //
@@ -59,57 +110,6 @@ public class DefaultChessBoard  implements ChessBoard{
 //        initializeBlackPieces();
 //    }
 //
-//    private void initializeBlackPieces() {
-//        for (int i = 0; i < 8; i++) {
-//            var position = new Position(6, i);
-//            var pawn = new Pawn(Player.black, position);
-//            activePieces.add(pawn);
-//        }
-//
-//        Rook rook1 = new Rook(Player.black, new Position(7, 0));
-//        Knight knight1 = new Knight(Player.black, new Position(7, 1));
-//        Bishop bishop1 = new Bishop(Player.black, new Position(7, 2));
-//        Queen queen = new Queen(Player.black, new Position(7, 3));
-//        King king = new King(Player.black, new Position(7, 4));
-//        Bishop bishop2 = new Bishop(Player.black, new Position(7, 5));
-//        Knight knight2 = new Knight(Player.black, new Position(7, 6));
-//        Rook rook2 = new Rook(Player.black, new Position(7, 7));
-//
-//        activePieces.add(rook1);
-//        activePieces.add(bishop1);
-//        activePieces.add(knight1);
-//        activePieces.add(queen);
-//        activePieces.add(king);
-//        activePieces.add(knight2);
-//        activePieces.add(bishop2);
-//        activePieces.add(rook2);
-//    }
-//
-//    private void initializeWhitePieces() {
-//        for (int i = 0; i < 8; i++) {
-//            var position = new Position(1, i);
-//            var pawn = new Pawn(Player.white, position);
-//            activePieces.add(pawn);
-//        }
-//
-//        Rook rook1 = new Rook(Player.white, new Position(0, 0));
-//        Knight knight1 = new Knight(Player.white, new Position(0, 1));
-//        Bishop bishop1 = new Bishop(Player.white, new Position(0, 2));
-//        Queen queen = new Queen(Player.white, new Position(0, 3));
-//        King king = new King(Player.white, new Position(0, 4));
-//        Bishop bishop2 = new Bishop(Player.white, new Position(0, 5));
-//        Knight knight2 = new Knight(Player.white, new Position(0, 6));
-//        Rook rook2 = new Rook(Player.white, new Position(0, 7));
-//
-//        activePieces.add(rook1);
-//        activePieces.add(bishop1);
-//        activePieces.add(knight1);
-//        activePieces.add(queen);
-//        activePieces.add(king);
-//        activePieces.add(knight2);
-//        activePieces.add(bishop2);
-//        activePieces.add(rook2);
-//    }
 //
 //    public void play() {
 //        final AtomicBoolean isPlaying = new AtomicBoolean(true);

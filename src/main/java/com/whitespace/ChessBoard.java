@@ -13,11 +13,7 @@ import java.util.stream.Stream;
 public interface ChessBoard {
     void play();
 
-    void revertLastMove();
-
     ChessBoard applyMove(Move move, boolean debug);
-
-    boolean isInvalidMove(Move move);
 
     List<Piece> getBlackPieces();
 

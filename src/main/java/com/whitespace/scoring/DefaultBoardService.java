@@ -1,5 +1,6 @@
 package com.whitespace.scoring;
 
+import com.whitespace.BestMoveService;
 import com.whitespace.BoardScoringService;
 import com.whitespace.ChessBoard;
 import com.whitespace.Player;
@@ -10,7 +11,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-public class DefaultBoardService {
+public class DefaultBoardService implements BestMoveService {
     private final Player player;
     private final BoardScoringService boardScoringService;
 
@@ -48,24 +49,22 @@ public class DefaultBoardService {
         };
         myPieces.parallelStream()
                 .flatMap((Function<Piece, Stream<Move>>) piece -> piece.possibleStreamMoves(chessBoard))
-                .filter(move -> !chessBoard.isInvalidMove(move))
                 .forEach(myMove -> {
-                    chessBoard.applyMove(myMove, true);
+                    var opponentBoard = chessBoard.applyMove(myMove, true);
                     // TODO add a check if this is a game winning move
                     var opponentsPieces = switch (player) {
                         case black -> chessBoard.getWhitePieces();
                         case white -> chessBoard.getBlackPieces();
                     };
                     opponentsPieces.stream()
-                            .flatMap((Function<Piece, Stream<Move>>) piece -> piece.possibleMoves(chessBoard).stream())
-                            .filter(move -> !chessBoard.isInvalidMove(move))
+                            .flatMap((Function<Piece, Stream<Move>>) piece -> piece.possibleMoves(opponentBoard).stream())
                             .forEach(opponentsMove -> {
-                                chessBoard.applyMove(opponentsMove, true);
+                                var myBoard = opponentBoard.applyMove(opponentsMove, true);
                                 Move move = originalMove == null ? myMove : originalMove;
                                 if (currentDepth + 1 < maxDepth) {
-                                    findBestMove(chessBoard, currentDepth + 1, move, scores);
+                                    findBestMove(myBoard, currentDepth + 1, move, scores);
                                 } else {
-                                    var moveScore = boardScoringService.scoreBoard(chessBoard, player);
+                                    var moveScore = boardScoringService.scoreBoard(myBoard, player);
                                     scores.compute(move, (m, integers) -> {
                                         if (integers == null) {
                                             return new ArrayList<>();
@@ -73,9 +72,7 @@ public class DefaultBoardService {
                                         return integers;
                                     }).add(moveScore);
                                 }
-                                chessBoard.revertLastMove();
                             });
-                    chessBoard.revertLastMove();
                 });
     }
 }
