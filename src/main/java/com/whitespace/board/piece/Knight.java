@@ -19,74 +19,6 @@ public class Knight extends Piece {
 
     @Override
     public List<Move> possibleMoves(ChessBoard board) {
-//        List<Move> possibleMoves = new ArrayList<>(8);
-//        final var piece = this;
-//        var row = position.row() + 2;
-//        var column = position.column() + 1;
-//        board.getPosition(row, column).ifPresent(destination -> {
-//            if (!board.isSpaceTakenByMyPiece(destination, player)) {
-//                possibleMoves.add(new Move(piece, destination));
-//            }
-//        });
-//        row = position.row() + 2;
-//        column = position.column() - 1;
-//        board.getPosition(row, column).ifPresent(destination -> {
-//            if (!board.isSpaceTakenByMyPiece(destination, player)) {
-//                possibleMoves.add(new Move(piece, destination));
-//            }
-//        });
-//
-//
-//        row = position.row() - 2;
-//        column = position.column() + 1;
-//        board.getPosition(row, column).ifPresent(destination -> {
-//            if (!board.isSpaceTakenByMyPiece(destination, player)) {
-//                possibleMoves.add(new Move(piece, destination));
-//            }
-//        });
-//
-//        row = position.row() - 2;
-//        column = position.column() - 1;
-//        board.getPosition(row, column).ifPresent(destination -> {
-//            if (!board.isSpaceTakenByMyPiece(destination, player)) {
-//                possibleMoves.add(new Move(piece, destination));
-//            }
-//        });
-//
-//
-//        row = position.row() + 1;
-//        column = position.column() + 2;
-//        board.getPosition(row, column).ifPresent(destination -> {
-//            if (!board.isSpaceTakenByMyPiece(destination, player)) {
-//                possibleMoves.add(new Move(piece, destination));
-//            }
-//        });
-//
-//        row = position.row() + 1;
-//        column = position.column() - 2;
-//        board.getPosition(row, column).ifPresent(destination -> {
-//            if (!board.isSpaceTakenByMyPiece(destination, player)) {
-//                possibleMoves.add(new Move(piece, destination));
-//            }
-//        });
-//
-//        row = position.row() - 1;
-//        column = position.column() + 2;
-//        board.getPosition(row, column).ifPresent(destination -> {
-//            if (!board.isSpaceTakenByMyPiece(destination, player)) {
-//                possibleMoves.add(new Move(piece, destination));
-//            }
-//        });
-//
-//        row = position.row() - 1;
-//        column = position.column() + 2;
-//        board.getPosition(row, column).ifPresent(destination -> {
-//            if (!board.isSpaceTakenByMyPiece(destination, player)) {
-//                possibleMoves.add(new Move(piece, destination));
-//            }
-//        });
-//
-//        return possibleMoves;
         return possibleStreamMoves(board).collect(Collectors.toList());
     }
 
@@ -119,6 +51,13 @@ public class Knight extends Piece {
                         })
                         .findAny()
                         .isEmpty())
+                .filter(move -> {
+                    var destination = move.destination();
+                    var lowerLimit = 0;
+                    var upperLimit = 8;
+                    return (destination.row() >= lowerLimit && destination.row() < upperLimit)
+                            && (destination.column() >= lowerLimit && destination.column() < upperLimit);
+                })
                 .parallel();
     }
 }
