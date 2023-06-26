@@ -3,18 +3,22 @@ package com.whitespace.board;
 import com.whitespace.BestMoveService;
 import com.whitespace.ChessBoard;
 import com.whitespace.Player;
+import com.whitespace.board.move.MoveConsequence;
 import com.whitespace.board.piece.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class DefaultChessBoard implements ChessBoard {
-    private final Stack<String> moves = new Stack<>();
-    private final List<Piece> blackPieces = new ArrayList<>(16);
-    private final List<Piece> whitePieces = new ArrayList<>(16);
+    private final List<Piece> blackPieces = new ArrayList<>(24);
+    private final List<Piece> whitePieces = new ArrayList<>(24);
     private final BestMoveService blackBoardScoringService;
     private final BestMoveService whiteBoardScoringService;
+
+    private Optional<MoveConsequence> lastMoveConsequence = Optional.empty();
 
     public DefaultChessBoard(BestMoveService blackBoardScoringService, BestMoveService whiteBoardScoringService) {
         this(blackBoardScoringService, whiteBoardScoringService, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
@@ -24,7 +28,20 @@ public class DefaultChessBoard implements ChessBoard {
         this.blackBoardScoringService = blackBoardScoringService;
         this.whiteBoardScoringService = whiteBoardScoringService;
         loadFromFEN(fen);
-        moves.push(fen);
+        loadPromotedQueens();
+    }
+
+    private void loadPromotedQueens() {
+        int inactivePromotedQueens = 8;
+        for (int i = 0; i < inactivePromotedQueens; i++) {
+            var blackQueen = new Queen(Player.black, new Position(1, i));
+            blackQueen.setCaptured(true);
+            blackPieces.add(blackQueen);
+
+            var whiteQueen = new Queen(Player.white, new Position(6, i));
+            whiteQueen.setCaptured(true);
+            whitePieces.add(whiteQueen);
+        }
     }
 
     @Override
@@ -50,73 +67,98 @@ public class DefaultChessBoard implements ChessBoard {
             case white -> blackPieces;
             case black -> whitePieces;
         };
-        var destination = move.destination();
-        Optional<Piece> somethingToTake = opponentPieces.parallelStream()
+        Optional<Piece> optionalCapturedPiece = opponentPieces.parallelStream()
                 .filter(p -> {
+                    var destination = move.destination();
                     var opponentPosition = p.getPosition();
                     return opponentPosition.row() == destination.row() && opponentPosition.column() == destination.column();
                 })
-                .findAny();
-        if (somethingToTake.isPresent()) {
-            var opponentPiece = somethingToTake.get();
+                .findFirst();
+
+        optionalCapturedPiece.ifPresent(capturedPiece -> {
+            capturedPiece.setCaptured(true);
             var msg = String.format("%s %s at %s %s has taken opponent %s %s at %s,%s",
                     piece.getPlayer(),
                     piece.getClass().getSimpleName(),
                     piece.getPosition().row(),
                     piece.getPosition().column(),
-                    opponentPiece.getPlayer(),
-                    opponentPiece.getClass().getSimpleName(),
-                    opponentPiece.getPosition().row(),
-                    opponentPiece.getPosition().column());
+                    capturedPiece.getPlayer(),
+                    capturedPiece.getClass().getSimpleName(),
+                    capturedPiece.getPosition().row(),
+                    capturedPiece.getPosition().column());
             System.out.println(msg);
-            opponentPieces.remove(opponentPiece);
-        }
+        });
 
-        myPieces.get(index).setPosition(move.destination());
+        var previousPosition = piece.getPosition();
+        piece.setPosition(move.destination());
         if (isPawnPromoted(piece)) {
-            Queen queen = new Queen(piece.getPlayer(), move.destination());
-            myPieces.remove(index);
-            myPieces.add(queen);
+            piece.setCaptured(true);
+            myPieces.stream()
+                    .filter(p -> p.getClass() == Queen.class && p.isCaptured())
+                    .findFirst()
+                    .ifPresent(p -> {
+                        p.setCaptured(false);
+                        p.setPosition(move.destination());
+                    });
         }
 
+        lastMoveConsequence = Optional.of(new MoveConsequence(optionalCapturedPiece, piece, previousPosition));
         var newFen = translateToFEN();
-        moves.push(newFen);
         return Optional.of(newFen);
     }
 
     private boolean isPawnPromoted(Piece piece) {
         boolean isPawn = piece.getClass().equals(Pawn.class);
-        // rough check here
         boolean isBackRow = piece.getPosition().row() == 0 || piece.getPosition().row() == 7;
         return isPawn && isBackRow;
     }
 
     @Override
     public List<Piece> getBlackPieces() {
-        return blackPieces;
+        return blackPieces.parallelStream().filter(piece -> !piece.isCaptured()).collect(Collectors.toList());
     }
 
     @Override
     public List<Piece> getWhitePieces() {
-        return whitePieces;
+        return whitePieces.parallelStream().filter(piece -> !piece.isCaptured()).collect(Collectors.toList());
     }
 
     @Override
     public Optional<String> rollbackToPreviousMove() {
-        String lastMoveFEN = null;
-        int size = moves.size();
-        if (size >= 2) {
-            moves.pop();
-            lastMoveFEN = moves.peek();
-            loadFromFEN(lastMoveFEN);
-        } else if (size == 1) {
-            lastMoveFEN = moves.peek();
-        }
+        lastMoveConsequence.ifPresent(moveConsequence -> {
+            // reset the captured piece
+            moveConsequence.capturedOpponentPiece()
+                    .ifPresent(piece -> piece.setCaptured(false));
+
+            Piece movedPiece = moveConsequence.movedPiece();
+            if (isPawnPromoted(movedPiece)) {
+                List<Piece> myPieces = switch (movedPiece.getPlayer()) {
+                    case white -> whitePieces;
+                    case black -> blackPieces;
+                };
+                myPieces.parallelStream()
+                        .filter(piece -> piece.getClass() == Queen.class && !piece.isCaptured())
+                        .filter(piece -> {
+                            var movedPos = movedPiece.getPosition();
+                            var position = piece.getPosition();
+                            return movedPos.row() == position.row() && movedPos.column() == position.column();
+                        })
+                        .findAny()
+                        .ifPresent(piece -> {
+                            piece.setCaptured(true);
+                        });
+            }
+            var previousPosition = moveConsequence.previousPosition();
+            movedPiece.setPosition(previousPosition);
+            movedPiece.setCaptured(false);
+        });
+        lastMoveConsequence = Optional.empty();
+
+        String lastMoveFEN = translateToFEN();
         return Optional.ofNullable(lastMoveFEN);
     }
 
     public void loadFromFEN(String fen) {
-        moves.clear();
         blackPieces.clear();
         whitePieces.clear();
         String[] piecePlacement = fen.split("/");
@@ -173,6 +215,7 @@ public class DefaultChessBoard implements ChessBoard {
     public String translateToFEN() {
         StringBuilder stringBuilder = new StringBuilder();
         List<Piece> sortedPieces = Stream.concat(whitePieces.parallelStream(), blackPieces.parallelStream())
+                .filter(piece -> !piece.isCaptured())
                 .sorted((p1, p2) -> {
                     var pos1 = p1.getPosition();
                     var pos2 = p2.getPosition();

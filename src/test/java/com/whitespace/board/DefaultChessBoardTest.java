@@ -50,10 +50,10 @@ class DefaultChessBoardTest {
                     return position.column() == 0 && position.row() == 6;
                 })
                 .findAny().get();
-        var move = new Move(piece, new Position(0, 0));
+        var move = new Move(piece, new Position(4, 0));
         chessBoard.applyMove(move, true);
         String actual = chessBoard.translateToFEN();
-        String expected = "Qnbqkbnr/pppppppp/8/8/8/8/1PPPPPPP/RNBQKBNR - - - - -";
+        String expected = "rnbqkbnr/pppppppp/8/8/P7/8/1PPPPPPP/RNBQKBNR - - - - -";
         Assertions.assertThat(actual).isEqualTo(expected);
     }
 
@@ -82,7 +82,18 @@ class DefaultChessBoardTest {
         var piece = chessBoard.getWhitePieces().get(0);
         var move = new Move(piece, new Position(1, 0));
         chessBoard.applyMove(move, true);
-        var expected = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+        var expected = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR - - - - -";
+        var actual = chessBoard.rollbackToPreviousMove().get();
+        Assertions.assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    public void pawnMoveCaptureOpponentPromotedRollbackSuccessful() {
+        DefaultChessBoard chessBoard = new DefaultChessBoard(null, null, "p7/8/8/8/8/8/P/8 b KQkq e3 0 1");
+        var piece = chessBoard.getWhitePieces().get(0);
+        var move = new Move(piece, new Position(0, 0));
+        chessBoard.applyMove(move, true);
+        var expected = "p7/8/8/8/8/8/P7/8 - - - - -";
         var actual = chessBoard.rollbackToPreviousMove().get();
         Assertions.assertThat(actual).isEqualTo(expected);
     }
@@ -90,7 +101,7 @@ class DefaultChessBoardTest {
     @Test
     public void startFromDefaultNoMoveRollbackNotPossible() {
         DefaultChessBoard chessBoard = new DefaultChessBoard(null, null);
-        var expected = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+        var expected = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR - - - - -";
         var actual = chessBoard.rollbackToPreviousMove().get();
         Assertions.assertThat(actual).isEqualTo(expected);
     }

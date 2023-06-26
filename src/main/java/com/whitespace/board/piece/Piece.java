@@ -12,9 +12,19 @@ public abstract class Piece {
     protected Position position;
     protected final Player player;
 
+    private boolean captured = false;
+
     protected Piece(Player player, Position position) {
         this.player = player;
         this.position = position;
+    }
+
+    public boolean isCaptured() {
+        return captured;
+    }
+
+    public void setCaptured(boolean captured) {
+        this.captured = captured;
     }
 
     public void setPosition(Position position) {
