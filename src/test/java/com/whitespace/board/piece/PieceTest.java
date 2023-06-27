@@ -93,7 +93,6 @@ class PieceTest {
 
         var board = Mockito.mock(ChessBoard.class);
         Mockito.when(board.getWhitePieces()).thenReturn(Arrays.asList(
-                new Pawn(Player.white, new Position(0, 0)),
                 new Pawn(Player.white, new Position(0, 1)),
                 new Pawn(Player.white, new Position(1, 1)),
                 new Pawn(Player.white, new Position(1, 0))

@@ -14,17 +14,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class DefaultChessBoardTest {
 
-    @Test
-    void testHashCode() {
-//        assertEquals(new DefaultChessBoard(null, null).hashCode(),
-//                new DefaultChessBoard(null, null).hashCode());
-    }
 
     @Test
     public void testCopy() {
-//        var d1 = new DefaultChessBoard(null, null);
-//        var d2 = d1.copy();
-//        assertTrue(d1.equals(d2));
+        DefaultChessBoard chessBoard = new DefaultChessBoard(null, null);
+        List<Move> moves = chessBoard.getWhitePieces().parallelStream().flatMap(piece -> piece.possibleStreamMoves(chessBoard)).collect(Collectors.toList());
+        Assertions.assertThat(moves.size()).isEqualTo(20);
     }
 
     @Test

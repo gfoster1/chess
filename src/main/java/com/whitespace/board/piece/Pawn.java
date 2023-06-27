@@ -26,8 +26,8 @@ public class Pawn extends Piece {
     public Stream<Move> possibleStreamMoves(ChessBoard chessBoard) {
         Stream.Builder<Move> builder = Stream.builder();
         int multipler = switch (player) {
-            case white -> 1;
-            case black -> -1;
+            case white -> -1;
+            case black -> 1;
         };
 
         if (position.equals(startingPosition)) {

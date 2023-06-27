@@ -103,8 +103,8 @@ public class DefaultChessBoard implements ChessBoard {
         }
 
         lastMoveConsequence = Optional.of(new MoveConsequence(optionalCapturedPiece, piece, previousPosition));
-        var newFen = translateToFEN();
-        return Optional.of(newFen);
+        var newFen = debug ? translateToFEN() : null;
+        return Optional.ofNullable(newFen);
     }
 
     private boolean isPawnPromoted(Piece piece) {
@@ -126,9 +126,7 @@ public class DefaultChessBoard implements ChessBoard {
     @Override
     public Optional<String> rollbackToPreviousMove() {
         lastMoveConsequence.ifPresent(moveConsequence -> {
-            // reset the captured piece
-            moveConsequence.capturedOpponentPiece()
-                    .ifPresent(piece -> piece.setCaptured(false));
+            moveConsequence.capturedOpponentPiece().ifPresent(p -> p.setCaptured(false));
 
             Piece movedPiece = moveConsequence.movedPiece();
             if (isPawnPromoted(movedPiece)) {
@@ -137,15 +135,15 @@ public class DefaultChessBoard implements ChessBoard {
                     case black -> blackPieces;
                 };
                 myPieces.parallelStream()
-                        .filter(piece -> piece.getClass() == Queen.class && !piece.isCaptured())
-                        .filter(piece -> {
+                        .filter(p -> p.getClass() == Queen.class && !p.isCaptured())
+                        .filter(p -> {
                             var movedPos = movedPiece.getPosition();
-                            var position = piece.getPosition();
+                            var position = p.getPosition();
                             return movedPos.row() == position.row() && movedPos.column() == position.column();
                         })
                         .findAny()
-                        .ifPresent(piece -> {
-                            piece.setCaptured(true);
+                        .ifPresent(p -> {
+                            p.setCaptured(true);
                         });
             }
             var previousPosition = moveConsequence.previousPosition();
@@ -153,9 +151,7 @@ public class DefaultChessBoard implements ChessBoard {
             movedPiece.setCaptured(false);
         });
         lastMoveConsequence = Optional.empty();
-
-        String lastMoveFEN = translateToFEN();
-        return Optional.ofNullable(lastMoveFEN);
+        return Optional.ofNullable(translateToFEN());
     }
 
     public void loadFromFEN(String fen) {
