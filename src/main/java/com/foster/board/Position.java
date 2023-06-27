@@ -1,0 +1,4 @@
+package com.foster.board;
+
+public record Position(int row, int column) {
+}
