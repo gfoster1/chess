@@ -26,7 +26,7 @@ public class DefaultBoardScoringService implements BoardScoringService {
         rankRubrik.put(Pawn.class, 1);
     }
 
-    public int scoreBoard(ChessBoard board, Player player) {
+    public double scoreBoard(ChessBoard board, Player player) {
         List<Piece> myPieces;
         List<Piece> opponentsPieces;
         if (player.equals(Player.black)) {
@@ -40,20 +40,20 @@ public class DefaultBoardScoringService implements BoardScoringService {
     }
 
     @Override
-    public int scorePieces(List<Piece> myPieces, List<Piece> opponentsPieces) {
-        int myScore = scorePieces(myPieces);
+    public double scorePieces(List<Piece> myPieces, List<Piece> opponentsPieces) {
+        var myScore = scorePieces(myPieces);
         if (myScore == Integer.MIN_VALUE) {
             return Integer.MIN_VALUE;
         }
 
-        int opponentScore = scorePieces(opponentsPieces);
+        var opponentScore = scorePieces(opponentsPieces);
         if (opponentScore == Integer.MIN_VALUE) {
             return Integer.MAX_VALUE;
         }
         return myScore - opponentScore;
     }
 
-    private int scorePieces(List<Piece> myPieces) {
+    private double scorePieces(List<Piece> myPieces) {
         var capturedMyKing = new AtomicBoolean(true);
         var numberOfSeenPieces = new HashMap<Class<?>, Integer>();
         var score = myPieces.stream()
