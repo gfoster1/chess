@@ -12,7 +12,7 @@ class DefaultBoardServiceTest {
     @Test
     public void oneLevel() {
         DefaultBoardScoringService boardScoringService = new DefaultBoardScoringService();
-        DefaultBoardService defaultBoardService = new DefaultBoardService(Player.white, boardScoringService, 1);
+        DefaultBoardService defaultBoardService = new DefaultBoardService(Player.white, boardScoringService, 2);
         DefaultChessBoard chessBoard = new DefaultChessBoard(defaultBoardService, defaultBoardService);
         Optional<Move> move = defaultBoardService.findBestMove(chessBoard);
     }

@@ -8,18 +8,20 @@ import com.whitespace.board.Move;
 import com.whitespace.board.piece.Piece;
 
 import java.util.*;
-import java.util.function.Consumer;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
 import java.util.stream.Stream;
 
 public class DefaultBoardService implements BestMoveService {
-    private final Map<String, Integer> cachedBoardScores = new HashMap<>();
     private final int maxDepth;
     private final Player player;
     private final BoardScoringService boardScoringService;
+    private final Set<ProcessedMoveNode> nodes = new HashSet<>();
+    private final Map<String, Double> cachedBoardScores = new HashMap<>();
+
+    private final Map<String, ProcessedMoveNode> cachedProcessedMoveNodes = new HashMap<>();
 
     public DefaultBoardService(Player player, BoardScoringService boardScoringService, int maxDepth) {
         this.player = player;
@@ -29,7 +31,7 @@ public class DefaultBoardService implements BestMoveService {
 
     public Optional<Move> findBestMove(ChessBoard chessBoard) {
         Map<Move, List<Integer>> scores = new HashMap<>();
-        findBestMove(chessBoard, 0, null, scores);
+        findBestMove(chessBoard, 0, null);
         if (scores.isEmpty()) {
             return Optional.empty();
         }
@@ -38,81 +40,92 @@ public class DefaultBoardService implements BestMoveService {
         return Optional.empty();
     }
 
-    private double findBestMove(ChessBoard chessBoard, int currentDepth, Move originalMove, Map<Move, List<Integer>> scores) {
-
+    private ProcessedMoveNode findBestMove(ChessBoard chessBoard, int currentDepth, ProcessedMoveNode originalNode) {
         if (currentDepth == maxDepth) {
-            if (originalMove == null) {
-                throw new IllegalStateException("We have a problem");
-            }
-
-            var FEN = chessBoard.translateToFEN();
-            var score = cachedBoardScores.compute(FEN, (key, value) -> {
-                var result = value;
-                if (value == null) {
-                    System.out.println("Miss FEN = " + key);
-                    result = boardScoringService.scoreBoard(chessBoard, originalMove.piece().getPlayer());
-                } else {
-                    System.out.println("Hit FEN = " + key);
-                }
-                return result;
-            });
-            scores.get(originalMove).add(score);
-            return score;
+            double score = getCachedMove(chessBoard, player);
+            return new ProcessedMoveNode(originalNode.move, originalNode.FEN, score, false);
         }
 
         var myPieces = switch (player) {
             case black -> chessBoard.getBlackPieces();
             case white -> chessBoard.getWhitePieces();
         };
-        MoveProcessResults topResult = new MoveProcessResults(null, null, new DoubleSummaryStatistics());
-        List<Move> myMoves = myPieces.parallelStream()
+        var myMoves = myPieces.parallelStream()
                 .flatMap((Function<Piece, Stream<Move>>) piece -> piece.possibleStreamMoves(chessBoard))
                 .collect(Collectors.toList());
+        ProcessedMoveNode bestMove = new ProcessedMoveNode();
         for (int i = 0; i < myMoves.size(); i++) {
             var myMove = myMoves.get(i);
-            chessBoard.applyMove(myMove, false);
-            var move = originalMove == null ? myMove : originalMove;
-            if (originalMove == null) {
-                scores.computeIfAbsent(move, m -> new ArrayList<>());
-            }
+            String FEN = chessBoard.applyMove(myMove, true).get();
+            var currentNode = new ProcessedMoveNode(myMove, FEN, Double.MIN_VALUE, false);
 
             var opponentsPieces = switch (player) {
                 case black -> chessBoard.getWhitePieces();
                 case white -> chessBoard.getBlackPieces();
             };
-            List<Double> opponentResults = new ArrayList<>();
             List<Move> opponentsMoves = opponentsPieces.parallelStream()
                     .flatMap((Function<Piece, Stream<Move>>) piece -> piece.possibleStreamMoves(chessBoard))
                     .collect(Collectors.toList());
+            List<ProcessedMoveNode> processedOpponentMoves = new ArrayList<>(opponentsMoves.size());
             for (int j = 0; j < opponentsMoves.size(); j++) {
                 var opponentsMove = opponentsMoves.get(j);
                 chessBoard.applyMove(opponentsMove, false);
-                var score = findBestMove(chessBoard, currentDepth + 1, move, scores);
-                opponentResults.add(score);
-                chessBoard.rollbackToPreviousMove();
+                var processedOpponentsMove = findBestMove(chessBoard, currentDepth + 1, currentNode);
+                processedOpponentMoves.add(processedOpponentsMove);
+                chessBoard.rollbackToPreviousMove(false);
             }
-            var FEN = chessBoard.rollbackToPreviousMove().get();
-            DoubleSummaryStatistics doubleSummaryStatistics = opponentResults.stream()
-                    .mapToDouble(d -> d.doubleValue())
+            DoubleSummaryStatistics doubleSummaryStatistics = processedOpponentMoves.stream()
+                    .mapToDouble(processedMoveNode -> processedMoveNode.score)
                     .summaryStatistics();
-            if (doubleSummaryStatistics.getAverage() > topResult.doubleSummaryStatistics.getAverage()) {
-                topResult = new MoveProcessResults(myMove, FEN, doubleSummaryStatistics);
+            currentNode.complete = true;
+            currentNode.score = doubleSummaryStatistics.getAverage();
+            if (currentNode.score > bestMove.score) {
+                bestMove = currentNode;
             }
+            chessBoard.rollbackToPreviousMove(false);
         }
-        return topResult.doubleSummaryStatistics.getAverage();
+//        Collections.sort(processedOpponentMoves, (p1, p2) -> Double.compare(p2.score, p1.score));
+//        var bestMove = processedOpponentMoves.get(0);
+        System.out.println("The best move for the current board is = " + bestMove);
+        return bestMove;
     }
 
-    private static final class MoveProcessResults {
+    private double getCachedMove(ChessBoard chessBoard, Player player) {
+        var FEN = chessBoard.translateToFEN();
+        var score = cachedBoardScores.compute(FEN, (key, value) -> {
+            var result = value;
+            if (value == null) {
+                System.out.println("Miss FEN = " + key);
+                result = (double) boardScoringService.scoreBoard(chessBoard, player);
+            } else {
+                System.out.println("Hit FEN = " + key);
+            }
+            return result;
+        });
+        return score;
+    }
+
+    private static final class ProcessedMoveNode {
         private Move move;
         private String FEN;
-        private DoubleSummaryStatistics doubleSummaryStatistics = new DoubleSummaryStatistics();
-
+        //        private DoubleSummaryStatistics doubleSummaryStatistics = new DoubleSummaryStatistics();
+        private double score = Double.MIN_VALUE;
         private boolean complete = false;
 
-        public MoveProcessResults(Move move, String FEN, DoubleSummaryStatistics doubleSummaryStatistics) {
+        public ProcessedMoveNode(Move move, String FEN, double score, boolean complete) {
             this.move = move;
             this.FEN = FEN;
-            this.doubleSummaryStatistics = doubleSummaryStatistics;
+            this.score = score;
+            this.complete = complete;
+        }
+
+        public ProcessedMoveNode() {
+        }
+
+        @Override
+        public String toString() {
+            String format = "FEN = [%s] score = [%s]";
+            return String.format(format, FEN, score);
         }
     }
 }

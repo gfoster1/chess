@@ -124,7 +124,7 @@ public class DefaultChessBoard implements ChessBoard {
     }
 
     @Override
-    public Optional<String> rollbackToPreviousMove() {
+    public Optional<String> rollbackToPreviousMove(boolean includeFEN) {
         lastMoveConsequence.ifPresent(moveConsequence -> {
             moveConsequence.capturedOpponentPiece().ifPresent(p -> p.setCaptured(false));
 
@@ -151,7 +151,7 @@ public class DefaultChessBoard implements ChessBoard {
             movedPiece.setCaptured(false);
         });
         lastMoveConsequence = Optional.empty();
-        return Optional.ofNullable(translateToFEN());
+        return includeFEN ? Optional.ofNullable(translateToFEN()) : Optional.empty();
     }
 
     public void loadFromFEN(String fen) {

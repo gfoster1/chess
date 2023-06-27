@@ -78,7 +78,7 @@ class DefaultChessBoardTest {
         var move = new Move(piece, new Position(1, 0));
         chessBoard.applyMove(move, true);
         var expected = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR - - - - -";
-        var actual = chessBoard.rollbackToPreviousMove().get();
+        var actual = chessBoard.rollbackToPreviousMove(true).get();
         Assertions.assertThat(actual).isEqualTo(expected);
     }
 
@@ -89,7 +89,7 @@ class DefaultChessBoardTest {
         var move = new Move(piece, new Position(0, 0));
         chessBoard.applyMove(move, true);
         var expected = "p7/8/8/8/8/8/P7/8 - - - - -";
-        var actual = chessBoard.rollbackToPreviousMove().get();
+        var actual = chessBoard.rollbackToPreviousMove(true).get();
         Assertions.assertThat(actual).isEqualTo(expected);
     }
 
@@ -97,7 +97,7 @@ class DefaultChessBoardTest {
     public void startFromDefaultNoMoveRollbackNotPossible() {
         DefaultChessBoard chessBoard = new DefaultChessBoard(null, null);
         var expected = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR - - - - -";
-        var actual = chessBoard.rollbackToPreviousMove().get();
+        var actual = chessBoard.rollbackToPreviousMove(true).get();
         Assertions.assertThat(actual).isEqualTo(expected);
     }
 }

@@ -15,7 +15,7 @@ public interface ChessBoard {
 
     List<Piece> getWhitePieces();
 
-    Optional<String> rollbackToPreviousMove();
+    Optional<String> rollbackToPreviousMove(boolean includeFEN);
 
     public String translateToFEN();
 }
